@@ -1,21 +1,8 @@
 local announce = require 'gluon.announce'
 local deflate = require 'deflate'
 local json = require 'luci.jsonc'
-local nixio = require 'nixio'
-local fs = require 'nixio.fs'
 
-local memoize = {}
-
-nixio.chdir('/lib/gluon/announce/')
-
-for dir in fs.glob('*.d') do
-  local name = dir:sub(1, -3)
-  memoize[name] = announce.collect_dir(dir)
-end
-
-local function collect(type)
-  return memoize[type] and memoize[type]()
-end
+local collect = announce.init('/lib/gluon/announce')
 
 module('gluon.announced', package.seeall)
 
@@ -29,7 +16,7 @@ function handle_request(query)
 
     for q in m:gmatch('([a-z]+)') do
       local ok, val = pcall(collect, q)
-      if ok then
+      if ok and val then
         data[q] = val
       end
     end
@@ -38,9 +25,9 @@ function handle_request(query)
       ret = deflate.compress(json.stringify(data))
     end
   elseif query:match('^[a-z]+$') then
-    local ok, data = pcall(collect, query)
-    if ok then
-      ret = json.stringify(data)
+    local ok, val = pcall(collect, query)
+    if ok and val then
+      ret = json.stringify(val)
     end
   end
 

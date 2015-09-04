@@ -17,16 +17,22 @@ endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
+	$(CP) ./src/* $(PKG_BUILD_DIR)/
 endef
 
 define Build/Configure
 endef
 
+TARGET_CFLAGS += $(FPIC)
+
 define Build/Compile
+	CFLAGS="$(TARGET_CFLAGS)" CPPFLAGS="$(TARGET_CPPFLAGS)" $(MAKE) -C $(PKG_BUILD_DIR) $(TARGET_CONFIGURE_OPTS)
 endef
 
 define Package/gluon-announce/install
 	$(CP) ./files/* $(1)/
+	mkdir -p $(1)/usr/lib/lua/gluon
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/announce.so $(1)/usr/lib/lua/gluon/
 endef
 
 $(eval $(call BuildPackage,gluon-announce))
