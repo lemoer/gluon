@@ -143,11 +143,12 @@ static int announce_init(lua_State *L) {
 
   char initfile[PATH_MAX];
   snprintf(initfile, PATH_MAX, "%s/%s", lua_tostring(L, 1), ".init.lua");
-  luaL_dofile(L, initfile);
 
   lua_pushcfunction(L, announce_collect_dir);
   lua_pushvalue(L, 1);
   lua_call(L, 1, 1);
+
+  luaL_dofile(L, initfile);
 
   lua_pushcclosure(L, _announce_exec_tree_closure, 1);
   return 1;
