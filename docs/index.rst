@@ -30,6 +30,7 @@ Features
    features/monitoring
    features/authorized-keys
    features/roles
+   features/statuspage
 
 Developer Documentation
 -----------------------
