@@ -7,15 +7,14 @@
 #define STR(x) #x
 #define XSTR(x) STR(x)
 
-static json_object *neighbours(void) {
-  struct json_object *obj = json_object_new_object();
+void add_neighbours_batman(struct json_object *obj) {
 
   FILE *f;
 
   f = fopen("/sys/kernel/debug/batman_adv/bat0/originators" , "r");
 
   if (f == NULL)
-    return NULL;
+    return;
 
   while (!feof(f)) {
     char mac1[18];
@@ -32,6 +31,7 @@ static json_object *neighbours(void) {
     if (strcmp(mac1, mac2) == 0) {
       struct json_object *neigh = json_object_new_object();
 
+      json_object_object_add(neigh, "protocol", json_object_new_string("batman"));
       json_object_object_add(neigh, "tq", json_object_new_int(tq));
       json_object_object_add(neigh, "lastseen", json_object_new_double(lastseen));
       json_object_object_add(neigh, "ifname", json_object_new_string(ifname));
@@ -41,23 +41,22 @@ static json_object *neighbours(void) {
   }
 
   fclose(f);
-
-  return obj;
 }
 
 int main(void) {
-  struct json_object *obj;
+  struct json_object *neighbours;
 
   printf("Content-type: text/event-stream\n\n");
   fflush(stdout);
 
   while (1) {
-    obj = neighbours();
-    if (obj) {
-      printf("data: %s\n\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
-      fflush(stdout);
-      json_object_put(obj);
-    }
+    neighbours = json_object_new_object();
+    add_neighbours_batman(neighbours);
+
+    printf("data: %s\n\n", json_object_to_json_string_ext(neighbours, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+    json_object_put(neighbours);
+
     sleep(10);
   }
 
