@@ -34,7 +34,7 @@ static struct json_object * respondd_provider_nodeinfo(void) {
 
 	struct json_object *software = json_object_new_object();
 	struct json_object *software_status_page = json_object_new_object();
-	json_object_object_add(software_status_page, "api", json_object_new_int(1));
+	json_object_object_add(software_status_page, "api", json_object_new_int(2));
 	json_object_object_add(software, "status-page", software_status_page);
 	json_object_object_add(ret, "software", software);
 

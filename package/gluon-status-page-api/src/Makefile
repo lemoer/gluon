@@ -3,12 +3,12 @@ CFLAGS += -std=c99 -D_BSD_SOURCE
 CFLAGS_JSONC = $(shell pkg-config --cflags json-c)
 LDFLAGS_JSONC = $(shell pkg-config --libs json-c)
 
-all: neighbours-batadv stations respondd.so
+all: neighbours-routing-metrics neighbours-wifi-signal-levels respondd.so
 
-neighbours-batadv: neighbours-batadv.c
+neighbours-routing-metrics: neighbours-routing-metrics.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_JSONC) $(LDFLAGS) $(LDFLAGS_JSONC) -Wall -o $@ $^ $(LDLIBS)
 
-stations: stations.c
+neighbours-wifi-signal-levels: neighbours-wifi-signal-levels.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_JSONC) $(LDFLAGS) $(LDFLAGS_JSONC) -Wall -o $@ $^ $(LDLIBS) -liwinfo
 
 respondd.so: respondd.c
