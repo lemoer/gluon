@@ -48,8 +48,8 @@ define([ "bacon"
       return r
     }
 
-    function stationsStream(ifname) {
-      return new Streams.Stations(ip, ifname).map(wrapIfname, ifname)
+    function wifiSignalLevelsStream(ifname) {
+      return new Streams.WifiSignalLevels(ip, ifname).map(wrapIfname, ifname)
     }
 
     function magic(interfaces) {
@@ -57,7 +57,7 @@ define([ "bacon"
       ifnames.forEach(querierAsk.push)
 
       var wifiStream = Bacon.fromArray(ifnames)
-                            .flatMap(stationsStream)
+                            .flatMap(wifiSignalLevelsStream)
                             .scan({}, function (a, b) {
                               a[b[0]] = b[1]
                               return a

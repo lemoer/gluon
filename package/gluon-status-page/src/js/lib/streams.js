@@ -48,7 +48,7 @@ define(["bacon", "lib/helper"], function(Bacon, Helper) {
     return simpleStream(url)
   }
 
-  function stations(ip, ifname) {
+  function wifiSignalLevels(ip, ifname) {
     var url = Helper.buildUrl(ip, "dyn/neighbours/wifi-signal-levels", ifname)
     return simpleStream(url)
   }
@@ -60,7 +60,7 @@ define(["bacon", "lib/helper"], function(Bacon, Helper) {
 
   return { nodeInfo: nodeInfo
          , Batadv: batadv
-         , Stations: stations
+         , WifiSignalLevels: wifiSignalLevels
          , Statistics: statistics
          }
 })
