@@ -2,7 +2,7 @@
 define(["bacon", "lib/helper"], function(Bacon, Helper) {
   function nodeInfo(ip, ifname) {
     return Bacon.fromBinder(function (sink) {
-      var url = Helper.buildUrl(ip, "dyn/neighbours-nodeinfo", ifname)
+      var url = Helper.buildUrl(ip, "dyn/neighbours/nodeinfo", ifname)
       var evtSource = new EventSource(url)
 
       evtSource.addEventListener("neighbour", function(e) {
@@ -44,12 +44,12 @@ define(["bacon", "lib/helper"], function(Bacon, Helper) {
   }
 
   function batadv(ip) {
-    var url = Helper.buildUrl(ip, "dyn/neighbours-batadv")
+    var url = Helper.buildUrl(ip, "dyn/neighbours/routing-metrics")
     return simpleStream(url)
   }
 
   function stations(ip, ifname) {
-    var url = Helper.buildUrl(ip, "dyn/stations", ifname)
+    var url = Helper.buildUrl(ip, "dyn/neighbours/wifi-signal-levels", ifname)
     return simpleStream(url)
   }
 
