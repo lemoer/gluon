@@ -10,6 +10,6 @@ echo 'Access-Control-Allow-Origin: *'
 
 batctl if | cut -d: -f1 | grep -qxF "$QUERY_STRING" || badrequest
 
-CMD="exec /lib/gluon/status-page/providers/neighbour-wifi-signal-levels '$QUERY_STRING'"
+CMD="exec /lib/gluon/status-page/providers/neighbours-wifi-signal-levels '$QUERY_STRING'"
 
 exec /usr/sbin/sse-multiplex "$CMD"
