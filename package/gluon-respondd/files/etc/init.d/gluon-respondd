@@ -13,7 +13,7 @@ LOCK=/var/run/gluon-respondd.lock
 
 
 do_start() {
-	DEVS=$(cat $DEVLIST 2>/dev/null | while read dev iface; do echo -n " -i $dev"; done)
+	DEVS=$(cat $DEVLIST 2>/dev/null | while read dev iface; do echo -n " -i $dev"; if [ "$dev" != "br-client" ]; then echo -n " -t 0"; fi; done)
 	service_start $DAEMON -g ff02::2:1001 -p 1001 -d /lib/gluon/respondd $DEVS
 }
 
