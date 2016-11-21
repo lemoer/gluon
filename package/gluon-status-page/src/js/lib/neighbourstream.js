@@ -63,16 +63,16 @@ define([ "bacon"
                               return a
                             })
 
-      var batadvStream = new Streams.Batadv(ip).toProperty({})
+      var routingMetricsStream = new Streams.RoutingMetrics(ip).toProperty({})
 
       return Bacon.combineWith(combine, wifiStream
-                                      , batadvStream.map(extractIfname)
+                                      , routingMetricsStream.map(extractIfname)
                                       , nodesBus.map(".macs")
                                       )
     }
 
-    function combine(wifi, batadv, macs) {
-      var interfaces = combineWithIfnames(wifi, batadv)
+    function combine(wifi, routingMetrics, macs) {
+      var interfaces = combineWithIfnames(wifi, routingMetrics)
 
       for (var ifname in interfaces) {
         var stations = interfaces[ifname]
@@ -89,8 +89,8 @@ define([ "bacon"
       return interfaces
     }
 
-    function combineWithIfnames(wifi, batadv) {
-      var ifnames = Object.keys(wifi).concat(Object.keys(batadv))
+    function combineWithIfnames(wifi, routingMetrics) {
+      var ifnames = Object.keys(wifi).concat(Object.keys(routingMetrics))
 
       // remove duplicates
       ifnames.filter(function(e, i) {
@@ -100,21 +100,21 @@ define([ "bacon"
       var out = {}
 
       ifnames.forEach(function (ifname) {
-        out[ifname] = combineWifiBatadv(wifi[ifname], batadv[ifname])
+        out[ifname] = combineWifiRoutingMetrics(wifi[ifname], routingMetrics[ifname])
       })
 
       return out
     }
 
-    function combineWifiBatadv(wifi, batadv) {
+    function combineWifiRoutingMetrics(wifi, routingMetrics) {
       var station
       var out = {}
 
-      for (station in batadv) {
+      for (station in routingMetrics) {
         if (!(station in out))
           out[station] = {}
 
-        out[station].batadv = batadv[station]
+        out[station].routingMetrics = routingMetrics[station]
       }
 
       for (station in wifi) {

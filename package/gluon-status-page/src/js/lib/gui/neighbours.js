@@ -78,10 +78,21 @@ function (Helper, SignalGraph, Signal) {
         tdInactive.textContent = Math.round(inactive / 1000) + " s"
       }
 
-      if ("batadv" in d)
-        tdTQ.textContent = Math.round(d.batadv.tq / 2.55) + " %"
-      else
+      if ("routingMetrics" in d) {
+        switch (d.routingMetrics.protocol) {
+          case 'batman':
+            tdTQ.textContent = "TQ: " + Math.round(d.routingMetrics.tq / 2.55) + " %"
+            break
+          case 'babel':
+            tdTQ.textContent = "Cost: " + Math.round(d.routingMetrics.cost / 653.53) + " %"
+            break
+          default:
+            tdTQ.textContent = "?PROTO?"
+            break
+        }
+      } else {
         tdTQ.textContent = "‒"
+      }
 
       if (infoSet)
         return
@@ -136,7 +147,7 @@ function (Helper, SignalGraph, Signal) {
     tr.appendChild(th)
 
     th = document.createElement("th")
-    th.textContent = "TQ"
+    th.textContent = "Metrik"
     tr.appendChild(th)
 
     th = document.createElement("th")

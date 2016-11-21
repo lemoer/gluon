@@ -43,7 +43,7 @@ define(["bacon", "lib/helper"], function(Bacon, Helper) {
     })
   }
 
-  function batadv(ip) {
+  function routingMetrics(ip) {
     var url = Helper.buildUrl(ip, "dyn/neighbours/routing-metrics")
     return simpleStream(url)
   }
@@ -59,7 +59,7 @@ define(["bacon", "lib/helper"], function(Bacon, Helper) {
   }
 
   return { nodeInfo: nodeInfo
-         , Batadv: batadv
+         , RoutingMetrics: routingMetrics
          , WifiSignalLevels: wifiSignalLevels
          , Statistics: statistics
          }
