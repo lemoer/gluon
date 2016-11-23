@@ -1,0 +1,20 @@
+#!/bin/sh
+
+. /usr/share/libubox/jshn.sh
+
+all_ifaces=$(batctl if | cut -d: -f1)
+
+cat <<EOF
+Access-Control-Allow-Origin: *
+Content-type: application/json
+
+EOF
+
+json_init
+for iface in $all_ifaces
+do
+	json_add_object "$iface"
+	json_add_string address $(cat /sys/class/net/$iface/address)
+	json_close_object
+done
+json_dump

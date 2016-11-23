@@ -24,7 +24,6 @@ endef
 
 define Build/Compile
 	$(call Build/Compile/Default)
-	$(call GluonSrcDiet,./luasrc,$(PKG_BUILD_DIR)/luadest/)
 endef
 
 define Package/gluon-status-page-api/install
@@ -36,7 +35,6 @@ define Package/gluon-status-page-api/install
 	$(CP) $(PKG_BUILD_DIR)/respondd.so $(1)/lib/gluon/respondd/status-page-api.so
 
 	$(CP) ./files/* $(1)/
-	$(CP) $(PKG_BUILD_DIR)/luadest/* $(1)/
 endef
 
 $(eval $(call BuildPackage,gluon-status-page-api))
