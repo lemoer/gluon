@@ -2,7 +2,8 @@
 
 . /usr/share/libubox/jshn.sh
 
-all_ifaces=$(batctl if | cut -d: -f1)
+all_ifaces=$(cat /var/run/gluon-respondd.devs | cut -d" " -f 1)
+local_ifaces=$(echo "$all_ifaces" | grep -v br-client)
 
 cat <<EOF
 Access-Control-Allow-Origin: *
@@ -11,7 +12,7 @@ Content-type: application/json
 EOF
 
 json_init
-for iface in $all_ifaces
+for iface in $local_ifaces
 do
 	json_add_object "$iface"
 	json_add_string address $(cat /sys/class/net/$iface/address)
