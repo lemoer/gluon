@@ -78,6 +78,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
   if (!neigh)
     return NL_OK;
 
+  json_object_object_add(neigh, "protocol", json_object_new_string("batman"));
   json_object_object_add(neigh, "tq", json_object_new_int(tq));
   json_object_object_add(neigh, "lastseen", json_object_new_double(lastseen / 1000.));
   json_object_object_add(neigh, "ifname", json_object_new_string(ifname));
@@ -87,42 +88,36 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
   return NL_OK;
 }
 
-static json_object *neighbours(void) {
+void add_neighbours_batman(struct json_object *obj) {
   struct neigh_netlink_opts opts = {
     .query_opts = {
       .err = 0,
     },
+    .obj = obj,
   };
-  int ret;
 
-  opts.obj = json_object_new_object();
-  if (!opts.obj)
-    return NULL;
-
-  ret = batadv_nl_query_common("bat0", BATADV_CMD_GET_ORIGINATORS,
-                               parse_orig_list_netlink_cb, NLM_F_DUMP,
-                               &opts.query_opts);
-  if (ret < 0) {
-    json_object_put(opts.obj);
-    return NULL;
-  }
-
-  return opts.obj;
+  batadv_nl_query_common("bat0", BATADV_CMD_GET_ORIGINATORS,
+                         parse_orig_list_netlink_cb, NLM_F_DUMP,
+                         &opts.query_opts);
 }
 
 int main(void) {
-  struct json_object *obj;
+  struct json_object *neighbours;
 
   printf("Content-type: text/event-stream\n\n");
   fflush(stdout);
 
   while (1) {
-    obj = neighbours();
-    if (obj) {
-      printf("data: %s\n\n", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PLAIN));
-      fflush(stdout);
-      json_object_put(obj);
-    }
+    neighbours = json_object_new_object();
+    if (!neighbours)
+      continue;
+
+    add_neighbours_batman(neighbours);
+
+    printf("data: %s\n\n", json_object_to_json_string_ext(neighbours, JSON_C_TO_STRING_PLAIN));
+    fflush(stdout);
+    json_object_put(neighbours);
+
     sleep(10);
   }
 
