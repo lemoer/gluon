@@ -29,7 +29,7 @@ endef
 
 define Package/gluon-status-page-api/install
 	$(INSTALL_DIR) $(1)/lib/gluon/status-page/providers
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/neighbours-batadv $(1)/lib/gluon/status-page/providers/
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/routing-metrics $(1)/lib/gluon/status-page/providers/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/stations $(1)/lib/gluon/status-page/providers/
 
 	$(INSTALL_DIR) $(1)/lib/gluon/respondd

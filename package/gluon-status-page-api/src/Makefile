@@ -20,9 +20,9 @@ endif
 CFLAGS_JSONC = $(shell pkg-config --cflags json-c)
 LDFLAGS_JSONC = $(shell pkg-config --libs json-c)
 
-all: neighbours-batadv stations respondd.so
+all: routing-metrics stations respondd.so
 
-neighbours-batadv: neighbours-batadv.c batadv-netlink.c
+routing-metrics: routing-metrics.c batadv-netlink.c
 	$(CC) $(CPPFLAGS) $(CFLAGS) $(CFLAGS_JSONC) $(LIBNL_CFLAGS) $(LDFLAGS) $(LDFLAGS_JSONC) $(LIBNL_LDLIBS) -Wall -o $@ $^ $(LDLIBS)
 
 stations: stations.c
