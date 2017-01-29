@@ -1,4 +1,4 @@
-GLUON_FEEDS='openwrt gluon routing luci'
+GLUON_FEEDS='openwrt gluon routing luci ddhcpd'
 
 OPENWRT_REPO=git://github.com/openwrt/openwrt.git
 OPENWRT_COMMIT=0f757bd2606971252f901ef3faf4dbd0086315f7
@@ -18,3 +18,9 @@ PACKAGES_ROUTING_COMMIT=a4eae82c155079a4372e4b910ec733f77288b717
 PACKAGES_LUCI_REPO=git://github.com/openwrt/luci.git
 PACKAGES_LUCI_COMMIT=70a4d43cc895b7d728b4fc201f2b6fd9f4b8aaec
 PACKAGES_LUCI_BRANCH=for-15.05
+
+# ddhcpd
+
+PACKAGES_DDHCPD_REPO=https://git.toppoint.de/sargon/gluon-ddhcpd
+PACKAGES_DDHCPD_COMMIT=2fddf309d76d9acb11f1437e4160b687dc0e4291
+PACKAGES_DDHCPD_BRANCH=master
