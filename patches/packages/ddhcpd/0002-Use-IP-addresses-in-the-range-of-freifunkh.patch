@@ -1,0 +1,25 @@
+From c74aa1557ba447391d21a73d4d7e09268660a754 Mon Sep 17 00:00:00 2001
+From: lemoer <git@irrelefant.net>
+Date: Sun, 5 Feb 2017 01:38:45 +0100
+Subject: [PATCH 2/2] Use IP addresses in the range of freifunkh
+
+---
+ ddhcpd/files/etc/init.d/ddhcpd | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ddhcpd/files/etc/init.d/ddhcpd b/ddhcpd/files/etc/init.d/ddhcpd
+index 84c84cd..de22315 100644
+--- a/ddhcpd/files/etc/init.d/ddhcpd
++++ b/ddhcpd/files/etc/init.d/ddhcpd
+@@ -2,7 +2,7 @@
+ 
+ start() {
+         rm -f /tmp/ddhcpd_ctl
+-        ddhcpd -o "3;4;10,116,254,254" -o "1;4;255,255,128,0" -o "28;4;10,116,254,255" -N 10.116.224.0/20 -b 2 -s 1 -c br-client -i br-client
++        ddhcpd -o "3;4;10,2,20,1" -o "1;4;255,255,128,0" -o "28;4;10,2,127,255" -N 10.2.112.0/20 -b 2 -s 1 -c br-client -i br-client
+         return 0
+ }
+ 
+-- 
+2.10.2
+

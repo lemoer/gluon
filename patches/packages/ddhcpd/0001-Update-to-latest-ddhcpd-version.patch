@@ -1,7 +1,7 @@
-From a124053fb17c686e1c0b502d6d5af6e9e77a5284 Mon Sep 17 00:00:00 2001
+From d54924f68d34f5b64b78b768afba2582594c3566 Mon Sep 17 00:00:00 2001
 From: lemoer <git@irrelefant.net>
 Date: Sun, 29 Jan 2017 15:50:27 +0100
-Subject: [PATCH] Update to latest ddhcpd version
+Subject: [PATCH 1/2] Update to latest ddhcpd version
 
 ---
  ddhcpd/Makefile | 4 ++--
