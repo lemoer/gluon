@@ -55,6 +55,17 @@ local function assert_type(var, t, msg)
    assert(type(var) == t, msg)
 end
 
+-- returns an unique keys in keys of returned table
+function keys_merged(a, b)
+   keys_table = {}
+   for k, _ in pairs(a or {}) do
+      keys_table[k] = 1
+   end
+   for k, _ in pairs(b or {}) do
+      keys_table[k] = 1
+   end
+   return keys_table
+end
 
 function forbid_in_domain(varname)
    local ok, val = pcall(assert(loadstring('return domain.' .. varname)))
@@ -148,9 +159,12 @@ function _need_table(loadvar, varname, subcheck, required)
 
    assert_type(var, 'table', conf_name.." error: expected `" .. varname .. "' to be a table")
 
+   local dvar = loadvar_domain(varname)
+   local svar = loadvar_site(varname)
+
    if subcheck then
-      for k, v in pairs(var) do
-         subcheck(k, v, conf_name)
+      for k, _ in pairs(keys_merged(dvar, svar)) do
+         subcheck(k, conf_name)
       end
    end
 
