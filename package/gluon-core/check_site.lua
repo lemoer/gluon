@@ -1,6 +1,6 @@
 need_site_string 'site_code'
 need_site_string 'site_name'
-need_site_string_match('site_seed', '^' .. ('%x'):rep(64) .. '$')
+need_domain_string_match('domain_seed', '^' .. ('%x'):rep(64) .. '$')
 
 need_site_string 'default_domain'
 
