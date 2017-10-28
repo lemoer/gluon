@@ -4,6 +4,17 @@ need_domain_string_match('domain_seed', '^' .. ('%x'):rep(64) .. '$')
 
 need_site_string 'default_domain'
 
+need_domain_string 'domain_name'
+
+function check_alias(k, conf_name)
+	assert_uci_name(k, conf_name)
+
+	local path = string.format('domain_aliases[%q]', k)
+	need_domain_string(path)
+end
+
+need_domain_table('domain_aliases', check_alias, false)
+
 if need_table('opkg', nil, false) then
 	need_string('opkg.lede', false)
 

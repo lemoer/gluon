@@ -29,7 +29,11 @@ local domain = (function(site)
 		dn = site['default_domain']
 	end
 
-	return read_json('/lib/gluon/domains/'..dn..'.json')
+	local domain = read_json('/lib/gluon/domains/'..dn..'.json')
+	if domain['domain_aliases'] and domain['domain_aliases'][dn] then
+		domain['domain_name'] = domain['domain_aliases'][dn]
+	end
+	return domain
 end)(site)
 
 
