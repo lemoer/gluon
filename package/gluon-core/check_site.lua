@@ -2,6 +2,9 @@ need_site_string 'site_code'
 need_site_string 'site_name'
 need_site_string_match('site_seed', '^' .. ('%x'):rep(64) .. '$')
 
+-- TODO: it should be checked for existance!
+need_site_string 'default_domain'
+
 if need_table('opkg', nil, false) then
 	need_string('opkg.lede', false)
 
