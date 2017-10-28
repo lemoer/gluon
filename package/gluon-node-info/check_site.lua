@@ -1,1 +1,1 @@
-need_string('roles.default', false)
+need_site_string('roles.default', false)

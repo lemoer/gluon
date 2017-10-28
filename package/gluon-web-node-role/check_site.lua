@@ -1,2 +1,2 @@
-need_string 'roles.default'
-need_string_array 'roles.list'
+need_site_string 'roles.default'
+need_site_string_array 'roles.list'

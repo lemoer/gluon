@@ -1,2 +1,1 @@
-need_boolean('setup_mode.skip', false)
-
+need_site_boolean('setup_mode.skip', false)

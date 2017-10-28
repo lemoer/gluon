@@ -1,1 +1,1 @@
-need_string_array 'authorized_keys'
+need_site_string_array 'authorized_keys'
