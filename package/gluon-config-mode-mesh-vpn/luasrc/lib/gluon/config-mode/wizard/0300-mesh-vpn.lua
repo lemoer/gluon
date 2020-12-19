@@ -2,9 +2,10 @@ local unistd = require 'posix.unistd'
 
 local has_fastd = unistd.access('/lib/gluon/mesh-vpn/fastd')
 local has_tunneldigger = unistd.access('/lib/gluon/mesh-vpn/tunneldigger')
+local has_wireguard = unistd.access('/lib/gluon/mesh-vpn/wireguard')
 
 return function(form, uci)
-	if not (has_fastd or has_tunneldigger) then
+	if not (has_fastd or has_tunneldigger or has_wireguard) then
 		return
 	end
 

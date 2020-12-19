@@ -40,6 +40,8 @@ if not uci:get('gluon', 'mesh_vpn') then
 		vpn = 'fastd'
 	elseif unistd.access('/lib/gluon/mesh-vpn/tunneldigger') then
 		vpn = 'tunneldigger'
+	-- wireguard is not listed here, as it didn't exist before the uci section
+	-- gluon.mesh_vpn was introduced. Therefore no migration is necessary.
 	end
 
 	local fastd_enabled = uci:get('fastd', 'mesh_vpn', 'enabled')
