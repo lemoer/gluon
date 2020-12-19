@@ -1,0 +1,8 @@
+local function check_peer(k)
+	need_alphanumeric_key(k)
+
+	need_string_match(in_domain(extend(k, {'public_key'})), "^" .. ("[%a%d+/]"):rep(43) .. "=$")
+	need_string(in_domain(extend(k, {'endpoint'})))
+end
+
+need_table({'mesh_vpn', 'wireguard', 'peers'}, check_peer)

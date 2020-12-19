@@ -8,6 +8,8 @@ if unistd.access('/lib/gluon/mesh-vpn/fastd') then
 	vpn = 'fastd'
 elseif unistd.access('/lib/gluon/mesh-vpn/tunneldigger') then
 	vpn = 'tunneldigger'
+elseif unistd.access('/lib/gluon/mesh-vpn/wireguard') then
+	vpn = 'wireguard'
 end
 
 local vpn_config = {
@@ -44,5 +46,14 @@ else
 	uci:set('tunneldigger', 'mesh_vpn', 'enabled', false)
 end
 uci:save('tunneldigger')
+
+if vpn == 'wireguard' then
+	uci:set('network', 'vpn', 'disabled', not vpn_config.enabled)
+	-- TODO: Test that limiting this via simple-tc here is correct!
+	uci:set('simple-tc', 'mesh_vpn', 'limit_ingress', vpn_config.limit_ingress)
+else
+	uci:set('network', 'vpn', 'disabled', true)
+end
+uci:save('network')
 
 uci:save('simple-tc')
