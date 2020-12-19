@@ -13,6 +13,7 @@ local pretty_hostname = require 'pretty_hostname'
 
 local has_fastd = unistd.access('/lib/gluon/mesh-vpn/fastd')
 local has_tunneldigger = unistd.access('/lib/gluon/mesh-vpn/tunneldigger')
+local has_wireguard = unistd.access('/lib/gluon/mesh-vpn/wireguard')
 
 
 local hostname = pretty_hostname.get(uci)
@@ -31,6 +32,14 @@ elseif has_fastd then
 	local fastd_enabled = uci:get_bool("fastd", "mesh_vpn", "enabled")
 	if fastd_enabled then
 		pubkey = util.trim(util.exec("/etc/init.d/fastd show_key mesh_vpn"))
+		msg = site_i18n._translate('gluon-config-mode:pubkey')
+	else
+		msg = site_i18n._translate('gluon-config-mode:novpn')
+	end
+elseif has_wireguard then
+	local wireguard_enabled = not uci:get_bool("network", "vpn", "disabled")
+	if wireguard_enabled then
+		pubkey = util.trim(util.exec("/sbin/uci get network.vpn.private_key | /usr/bin/wg pubkey"))
 		msg = site_i18n._translate('gluon-config-mode:pubkey')
 	else
 		msg = site_i18n._translate('gluon-config-mode:novpn')
