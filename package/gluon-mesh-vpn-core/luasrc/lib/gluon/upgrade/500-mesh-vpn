@@ -2,7 +2,6 @@
 
 local site = require 'gluon.site'
 local users = require 'gluon.users'
-local util = require 'gluon.util'
 
 local uci = require('simple-uci').cursor()
 local unistd = require 'posix.unistd'
@@ -10,11 +9,16 @@ local unistd = require 'posix.unistd'
 
 uci:section('network', 'interface', 'mesh_vpn', {
 	ifname = 'mesh-vpn',
-	proto = 'gluon_mesh',
+	proto = 'gluon_wired',
 	transitive = true,
 	fixed_mtu = true,
-	macaddr = util.generate_mac(7),
+	is_tunnel = true,
+	index = 7,
 	mtu = site.mesh_vpn.mtu(),
+	-- vxpeer6addr is ignored by the gluon_wired protocol, if the interface is
+	-- a layer 2 device and no vxlan is created. If it is a layer 3 device
+	-- and a vxlan interface is created, the peer addr will be set to this variable.
+	vxpeer6addr = 'fe80::1',
 })
 
 uci:save('network')
