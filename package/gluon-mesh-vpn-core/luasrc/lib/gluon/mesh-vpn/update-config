@@ -19,7 +19,7 @@ local vpn_config = {
 
 uci:delete('simple-tc', 'mesh_vpn')
 uci:section('simple-tc', 'interface', 'mesh_vpn', {
-	ifname = 'mesh-vpn',
+	ifname = 'vpn',
 	enabled = vpn_config.limit_enabled,
 	limit_egress = vpn_config.limit_egress,
 })

@@ -23,7 +23,7 @@ end
 uci:section('tunneldigger', 'broker', 'mesh_vpn', {
 	enabled = enabled,
 	uuid = util.node_id(),
-	interface = 'mesh-vpn',
+	interface = 'vpn',
 	bind_interface = 'br-wan',
 	group = 'gluon-mesh-vpn',
 	broker_selection = 'usage',
