@@ -8,7 +8,7 @@ local unistd = require 'posix.unistd'
 
 
 uci:section('network', 'interface', 'mesh_vpn', {
-	ifname = 'mesh-vpn',
+	ifname = 'vpn',
 	proto = 'gluon_wired',
 	transitive = true,
 	fixed_mtu = true,

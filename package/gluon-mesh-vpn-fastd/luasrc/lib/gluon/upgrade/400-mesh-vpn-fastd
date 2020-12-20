@@ -37,7 +37,7 @@ end
 uci:section('fastd', 'fastd', 'mesh_vpn', {
 	group = 'gluon-mesh-vpn',
 	syslog_level = syslog_level,
-	interface = 'mesh-vpn',
+	interface = 'vpn',
 	mode = 'tap',
 	mtu = site.mesh_vpn.mtu(),
 	secure_handshakes = true,
