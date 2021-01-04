@@ -1,0 +1,110 @@
+/*
+	ATTENTION: This file is not compiled when building gluon.
+	The compiled version is at ../files/lib/gluon/controller/www/static/controller.css
+
+	Use sass like this to update it:
+
+	sass --sourcemap=none -C -t compressed sass/controller.scss files/lib/gluon/controller/www/static/controller.css
+
+	When commiting changes to this file make sure to commit the respective
+	changes to the compiled version within the same commit!
+*/
+
+html, body, div, span,
+h1, h2, h3,
+dl, dt, dd,
+canvas, header,
+table, tr, th, td {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	outline: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	background: transparent;
+}
+
+
+body {
+	font-family: Roboto, Lucida Grande, sans, Arial;
+	color: rgba(0, 0, 0, 0.87);
+	font-size: 14px;
+	line-height: 1;
+	height: 100%;
+	width: 100%;
+}
+
+
+a {
+	color: rgba(220, 0, 103, 0.87);
+	text-decoration: none;
+
+	margin: 0;
+	padding: 0;
+	font-size: 100%;
+	vertical-align: baseline;
+	background: transparent;
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+h1 {
+	font-weight: bold;
+}
+
+h2 {
+	font-size: 16px;
+	margin-bottom: 16px;
+	color: rgba(0, 0, 0, 0.54);
+}
+
+h3 {
+	font-size: 15px;
+	margin-top: 16px;
+	margin-bottom: 8px;
+	color: rgba(0, 0, 0, 0.54);
+}
+
+.container {
+	width: 100vw;
+	min-height: 100vh;
+	background: rgb(253, 253, 253);
+	display: flex;
+	flex-direction: row;
+	align-items: stretch;
+
+	& > .sidebar {
+		width: 300px;
+	}
+
+	& > .content {
+		flex: 1;
+		flex-direction: column;
+		display: flex;
+		align-items: stretch;
+
+		& > iframe {
+			flex: 1;
+			border: 0px;
+		}
+	}
+
+	& > .frame {
+		flex: 1;
+		border-style: solid;
+		border-color: rgba(0, 0, 0, 0.12);
+
+		box-sizing: border-box;
+		padding: 16px;
+
+		& + .frame {
+			border-width: 0 0 0 1px;
+		}
+
+		&-wide {
+			flex: 2;
+		}
+	}
+}
