@@ -38,6 +38,12 @@ for index, remote in pairs(remotes) do
 		iframe('http://['..remote.address..']/'), _("Information"), 1)
 	entry({"node", remote.nodeid, "config"},
 		iframe('http://'..hostname..':'..tostring(37000+remote.index)..'/'), _("Information"), 1)
+	entry({"node", remote.nodeid, "map"},
+		iframe('https://hannover.freifunk.net/karte/#/en/map/'..remote.nodeid), _("Information"), 1)
+	entry({"node", remote.nodeid, "stats"},
+		iframe('https://stats.ffh.zone/d/000000021/router-fur-meshviewer?orgId=1&var-node='..remote.nodeid..'&from=now-12h&to=now-1m'), _("Information"), 1)
+	entry({"node", remote.nodeid, "keepitup"},
+		iframe('https://keepitup.ffh.zone/node/'..remote.nodeid), _("Information"), 1)
 end
 
 entry({"node", "new"}, model("newnode"), _("Network"), 40)
