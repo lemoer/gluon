@@ -39,3 +39,5 @@ for index, remote in pairs(remotes) do
 	entry({"node", remote.nodeid, "config"},
 		iframe('http://'..hostname..':'..tostring(37000+remote.index)..'/'), _("Information"), 1)
 end
+
+entry({"node", "new"}, model("newnode"), _("Network"), 40)

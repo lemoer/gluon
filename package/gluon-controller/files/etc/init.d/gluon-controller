@@ -24,7 +24,7 @@ start_instance() {
 	procd_append_param command -M $((38000+2*index))
 	# ssh args follow now
 	procd_append_param command -i /etc/dropbear/id_rsa
-	procd_append_param command -N -T
+	procd_append_param command -N -T -y
 	procd_append_param command -L "$((37000+index)):localhost:81"
 	procd_append_param command "$address"
 
