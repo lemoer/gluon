@@ -1,4 +1,18 @@
 <%-
+	local ubus = require 'ubus'
+	local unistd = require 'posix.unistd'
+	local util = require 'gluon.util'
+	local uci = require('simple-uci').cursor()
+
+	local hostname = 'localhost'
+	local remotes = {}
+
+	local iframe_src = ''
+
+	uci:foreach('gluon-controller', 'remote', function(remote)
+		remotes[tonumber(remote.index)] = remote
+	end)
+
 	http:prepare_content("application/xhtml+xml")
 -%>
 <!DOCTYPE html>
@@ -7,18 +21,23 @@
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, user-scalable=no" />
 
-		<title><%:Error%></title>
+		<title>Gluon Controller</title>
 
-		<link rel="stylesheet" href="/static/status-page.css" type="text/css" />
+		<link rel="stylesheet" href="/static/controller.css" type="text/css" />
 	</head>
-	<body>
-		<header>
-			<h1><%:Error%></h1>
-		</header>
+	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>">
 		<div class="container">
-			<div class="frame">
+			<div class="sidebar">
+				<% for _, remote in pairs(remotes) do %>
+				<h2><%| remote.name %></h2>
+				<a href="<%| url({'node', tostring(remote.index), 'config'}) %>">Config Mode</a>
+				<a href="<%| url({'node', tostring(remote.index), 'status'}) %>">Status Page</a>
+				<% end %>
+			</div>
+			<div class="content">
 				<% renderer.render(content, scope, pkg) %>
 			</div>
 		</div>
+
 	</body>
 </html>
