@@ -28,14 +28,19 @@
 	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>">
 		<div class="container">
 			<div class="sidebar">
-				<% for nodeid, remote in pairs(remotes) do %>
-				<h2><%| remote.name %></h2>
-				<a href="<%| url({'node', remote.nodeid, 'config'}) %>">Config Mode</a>
-				<a href="<%| url({'node', remote.nodeid, 'status'}) %>">Status Page</a>
-				<a href="<%| url({'node', remote.nodeid, 'map'}) %>">Map</a>
-				<a href="<%| url({'node', remote.nodeid, 'stats'}) %>">Stats</a>
-				<a href="<%| url({'node', remote.nodeid, 'keepitup'}) %>">KeepItUp</a>
-				<% end %>
+				<h1>Gluon-Controller</h1>
+				<div class="remotes">
+					<% for nodeid, remote in pairs(remotes) do %>
+					<div class="remote">
+					<h2><%| remote.name %></h2>
+						<a href="<%| url({'node', remote.nodeid, 'config'}) %>">Config Mode</a>,
+						<a href="<%| url({'node', remote.nodeid, 'status'}) %>">Status Page</a>,
+						<a href="<%| url({'node', remote.nodeid, 'map'}) %>">Map</a>,
+						<a href="<%| url({'node', remote.nodeid, 'stats'}) %>">Stats</a>,
+						<a href="<%| url({'node', remote.nodeid, 'keepitup'}) %>">KeepItUp</a>
+					</div>
+					<% end %>
+				</div>
 			</div>
 			<div class="content">
 				<% renderer.render(content, scope, pkg) %>
