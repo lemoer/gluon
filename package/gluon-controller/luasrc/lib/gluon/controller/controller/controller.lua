@@ -26,24 +26,25 @@ end)
 -- redirect from controller/ to something
 -- TODO: what to do if no node is configured!
 -- TODO: what to do if no node with index 1 is configured
-entry({}, redirect({"node", remotes[1].nodeid}))
+entry({}, redirect({"nodes", remotes[1].nodeid}))
 
 -- register routes for the remotes
 for index, remote in pairs(remotes) do
 	local hostname = 'localhost'
 
-	entry({"node", remote.nodeid},
-		redirect({"node", remote.nodeid, "status"}), _("Information"), 1)
-	entry({"node", remote.nodeid, "status"},
+	entry({"nodes", remote.nodeid},
+		redirect({"nodes", remote.nodeid, "status"}), _("Information"), 1)
+	entry({"nodes", remote.nodeid, "status"},
 		iframe('http://['..remote.address..']/'), _("Information"), 1)
-	entry({"node", remote.nodeid, "config"},
+	entry({"nodes", remote.nodeid, "config"},
 		iframe('http://'..hostname..':'..tostring(37000+remote.index)..'/'), _("Information"), 1)
-	entry({"node", remote.nodeid, "map"},
+	entry({"nodes", remote.nodeid, "map"},
 		iframe('https://hannover.freifunk.net/karte/#/en/map/'..remote.nodeid), _("Information"), 1)
-	entry({"node", remote.nodeid, "stats"},
+	entry({"nodes", remote.nodeid, "stats"},
 		iframe('https://stats.ffh.zone/d/000000021/router-fur-meshviewer?orgId=1&var-node='..remote.nodeid..'&from=now-12h&to=now-1m'), _("Information"), 1)
-	entry({"node", remote.nodeid, "keepitup"},
+	entry({"nodes", remote.nodeid, "keepitup"},
 		iframe('https://keepitup.ffh.zone/node/'..remote.nodeid), _("Information"), 1)
 end
 
-entry({"node", "new"}, model("newnode"), _("Network"), 40)
+entry({"nodes"}, template("listnodes"), _("Network"), 40)
+entry({"nodes", "new"}, model("newnode"), _("Network"), 40)

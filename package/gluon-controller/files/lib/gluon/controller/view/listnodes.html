@@ -1,0 +1,42 @@
+<%-
+	local ubus = require 'ubus'
+	local unistd = require 'posix.unistd'
+	local util = require 'gluon.util'
+	local uci = require('simple-uci').cursor()
+
+	local hostname = 'localhost'
+	local remotes = {}
+
+	local iframe_src = ''
+
+	uci:foreach('gluon-controller', 'remote', function(remote)
+		remotes[tonumber(remote.index)] = remote
+	end)
+
+	http:prepare_content("application/xhtml+xml")
+-%>
+
+<h1>List of Nodes</h1>
+
+<a href="<%= url({'nodes', 'new'}) %>">Add New Node</a>
+
+<table>
+	<thead>
+		<tr>
+			<th>Name</th>
+			<th>Address</th>
+			<th>Node-ID</th>
+			<th>Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		<% for nodeid, remote in pairs(remotes) do %>
+		<tr>
+			<td><%| remote.name %></td>
+			<td><%| remote.address %></td>
+			<td><%| remote.nodeid %></td>
+			<td><a href="#">Edit</a>, <a href="#">Delete</a></td>
+		</tr>
+		<% end %>
+	</tbody>
+</table>

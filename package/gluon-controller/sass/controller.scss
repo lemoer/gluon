@@ -96,6 +96,11 @@ h3 {
 				padding: 20px 0
 			}
 		}
+
+		& > a.manage-nodes {
+			display: block;
+			margin-top: 20px;
+		}
 	}
 
 	& > .content {
