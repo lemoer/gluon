@@ -28,10 +28,10 @@
 	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>">
 		<div class="container">
 			<div class="sidebar">
-				<% for _, remote in pairs(remotes) do %>
+				<% for nodeid, remote in pairs(remotes) do %>
 				<h2><%| remote.name %></h2>
-				<a href="<%| url({'node', tostring(remote.index), 'config'}) %>">Config Mode</a>
-				<a href="<%| url({'node', tostring(remote.index), 'status'}) %>">Status Page</a>
+				<a href="<%| url({'node', remote.nodeid, 'config'}) %>">Config Mode</a>
+				<a href="<%| url({'node', remote.nodeid, 'status'}) %>">Status Page</a>
 				<% end %>
 			</div>
 			<div class="content">
