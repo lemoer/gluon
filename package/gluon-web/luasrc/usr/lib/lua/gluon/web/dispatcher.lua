@@ -141,10 +141,10 @@ local function dispatch(config, http, request)
 					end
 				end,
 
-				model = function(name)
+				model = function(name, scope)
 					local pkg = _pkg
 					return function()
-						require('gluon.web.model')(config, http, renderer, name, pkg)
+						require('gluon.web.model')(config, http, renderer, name, pkg, scope)
 					end
 				end,
 

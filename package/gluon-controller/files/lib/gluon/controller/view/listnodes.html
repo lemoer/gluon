@@ -35,7 +35,7 @@
 			<td><%| remote.name %></td>
 			<td><%| remote.address %></td>
 			<td><%| remote.nodeid %></td>
-			<td><a href="#">Edit</a>, <a href="#">Delete</a></td>
+			<td><a href="<%| url({'nodes', remote.nodeid, 'edit'}) %>">Edit</a>, <a href="#">Delete</a></td>
 		</tr>
 		<% end %>
 	</tbody>

@@ -44,7 +44,12 @@ for index, remote in pairs(remotes) do
 		iframe('https://stats.ffh.zone/d/000000021/router-fur-meshviewer?orgId=1&var-node='..remote.nodeid..'&from=now-12h&to=now-1m'), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "keepitup"},
 		iframe('https://keepitup.ffh.zone/node/'..remote.nodeid), _("Information"), 1)
+
+	entry({"nodes", remote.nodeid, "edit"},
+		model("create_or_update_node", { remote=remote }), _("Information"), 1)
 end
 
+req = request
+
 entry({"nodes"}, template("listnodes"), _("Network"), 40)
-entry({"nodes", "new"}, model("newnode"), _("Network"), 40)
+entry({"nodes", "new"}, model("create_or_update_node"), _("Network"), 40)
