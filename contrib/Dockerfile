@@ -16,6 +16,7 @@ RUN apt update && apt install -y --no-install-recommends \
     wget \
     rsync \
     time \
+    qemu-utils \
     ecdsautils \
     lua-check \
     shellcheck \
