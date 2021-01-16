@@ -1,0 +1,62 @@
+From: Leonardo Mörlein <me@irrelefant.net>
+Date: Sat, 16 Jan 2021 23:26:13 +0100
+Subject: wireguard-tools: allow generating private_key (v2)
+
+When the uci configuration is created automatically during a very early
+stage, where no entropy daemon is set up, generating the key directly is
+not an option. Therefore we allow to set the private_key to "generate"
+and generate the private key directly before the interface is taken up.
+
+v2: We now use a new uci syntax to commit only the private_key and do
+    not commit uncommited user changes. This is not yet upstream as of
+    now.
+
+Signed-off-by: Leonardo Mörlein <me@irrelefant.net>
+
+diff --git a/package/network/utils/wireguard-tools/Makefile b/package/network/utils/wireguard-tools/Makefile
+index ff0207d6da05b9cf9b5a97e1b360387c39cea7d7..93505e3d961184d8a6778fd241704d2a4c0baf23 100644
+--- a/package/network/utils/wireguard-tools/Makefile
++++ b/package/network/utils/wireguard-tools/Makefile
+@@ -12,7 +12,7 @@ include $(INCLUDE_DIR)/kernel.mk
+ PKG_NAME:=wireguard-tools
+ 
+ PKG_VERSION:=1.0.20191226
+-PKG_RELEASE:=1
++PKG_RELEASE:=3
+ 
+ PKG_SOURCE:=wireguard-tools-$(PKG_VERSION).tar.xz
+ PKG_SOURCE_URL:=https://git.zx2c4.com/wireguard-tools/snapshot/
+diff --git a/package/network/utils/wireguard-tools/files/wireguard.sh b/package/network/utils/wireguard-tools/files/wireguard.sh
+index 4c811c6ba9a3fe7c5049c6400863cc167e7981cb..12acc9150b4a4a28e5032b63c8b3ceeef3601930 100644
+--- a/package/network/utils/wireguard-tools/files/wireguard.sh
++++ b/package/network/utils/wireguard-tools/files/wireguard.sh
+@@ -90,6 +90,20 @@ proto_wireguard_setup_peer() {
+ 	fi
+ }
+ 
++ensure_key_is_generated() {
++	local private_key
++	private_key="$(uci get network."$1".private_key)"
++
++	if [ "$private_key" == "generate" ]; then
++		local ucitmp
++		ucitmp="$(mktemp -d)"
++		private_key="$("${WG}" genkey)"
++		uci -q -P "$ucitmp" -x set network."$1".private_key="$private_key" && \
++			uci -q -P "$ucitmp" -x commit network
++		rm -rf "$ucitmp"
++	fi
++}
++
+ proto_wireguard_setup() {
+ 	local config="$1"
+ 	local wg_dir="/tmp/wireguard"
+@@ -99,6 +113,8 @@ proto_wireguard_setup() {
+ 	local listen_port
+ 	local mtu
+ 
++	ensure_key_is_generated "${config}"
++
+ 	config_load network
+ 	config_get private_key "${config}" "private_key"
+ 	config_get listen_port "${config}" "listen_port"
