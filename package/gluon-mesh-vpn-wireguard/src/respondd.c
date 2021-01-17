@@ -75,7 +75,7 @@ static struct json_object * get_wgpeerselector_version(void) {
 }
 
 static struct json_object * get_wireguard_public_key(void) {
-	FILE *f = popen("/sbin/uci get network.vpn.private_key | /usr/bin/wg pubkey", "r");
+	FILE *f = popen("exec /lib/gluon/mesh-vpn/wireguard_pubkey.sh", "r");
 	if (!f)
 		return NULL;
 

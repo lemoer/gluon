@@ -7,13 +7,22 @@ local util = require 'gluon.util'
 local uci = require('simple-uci').cursor()
 local unistd = require 'posix.unistd'
 
+local vpn_proto
+if unistd.access('/lib/gluon/mesh-vpn/fastd') then
+	vpn_proto = 'gluon_mesh'
+elseif unistd.access('/lib/gluon/mesh-vpn/tunneldigger') then
+	vpn_proto = 'gluon_mesh'
+elseif unistd.access('/lib/gluon/mesh-vpn/wireguard') then
+	vpn_proto = 'gluon_wireguard'
+end
 
 uci:section('network', 'interface', 'mesh_vpn', {
 	ifname = 'vpn',
-	proto = 'gluon_mesh',
+	proto = vpn_proto,
 	transitive = true,
 	fixed_mtu = true,
-	macaddr = util.generate_mac(7),
+	macaddr = util.generate_mac(7), -- needed for gluon_mesh
+	index = 7, -- needed for gluon_wireguard
 	mtu = site.mesh_vpn.mtu(),
 })
 
