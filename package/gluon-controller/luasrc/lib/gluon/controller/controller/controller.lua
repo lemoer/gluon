@@ -1,6 +1,7 @@
 local json = require 'jsonc'
 local site = require 'gluon.site'
 local util = require 'gluon.util'
+local ubus = require 'ubus'
 
 package 'gluon-controller'
 
@@ -23,10 +24,91 @@ uci:foreach('gluon-controller', 'remote', function(remote)
 	table.insert(remotes, remote)
 end)
 
+function login(http, username, password)
+	-- returns the session if it exists or return nil.
+	local conn = ubus.connect()
+	local session = conn:call("session", "login", {
+		username=username,
+		password=password
+	})
+
+	if not session then
+		-- TODO: login failed. flush something here
+		--foo();
+		print("TODO: out")
+		return
+	end
+
+	--print(session.ubus_rpc_session)
+	http:header('Set-Cookie', 'ubus_rpc_session='..session.ubus_rpc_session..'; SameSite=lax')
+end
+
+function get_session(http)
+	-- returns the session if it exists or return nil.
+
+	local ubus_rpc_session = http:getcookie("ubus_rpc_session")
+
+	if not ubus_rpc_session then
+		return nil
+	end
+
+	local conn = ubus.connect()
+	local session =  conn:call("session", "get", {
+		ubus_rpc_session=ubus_rpc_session
+	})
+
+	if not session then
+		return nil
+	end
+
+	return session.values
+end
+
+
+function logout(http)
+	-- returns the session if it exists or return nil.
+
+	local ubus_rpc_session = http:getcookie("ubus_rpc_session")
+
+	if not ubus_rpc_session then
+		return nil
+	end
+
+	local conn = ubus.connect()
+	return conn:call("session", "destroy", {
+		ubus_rpc_session=ubus_rpc_session
+	})
+end
+
 -- redirect from controller/ to something
 -- TODO: what to do if no node is configured!
 -- TODO: what to do if no node with index 1 is configured
-entry({}, redirect({"nodes", remotes[1].nodeid}))
+if #remotes > 0 then
+	entry({}, redirect({"nodes", remotes[1].nodeid}))
+end
+
+--login("root", "test")
+entry({"login"}, call(function(http, renderer)
+	login(http, "root", "test")
+	http:redirect('/cgi-bin/controller/test')
+	http:close()
+end))
+
+entry({"logout"}, call(function(http, renderer)
+	logout(http)
+	http:redirect('/cgi-bin/controller/test')
+	http:close()
+end))
+
+entry({"test"}, call(function(http, renderer)
+	local session = get_session(http)
+	if session then
+		http:write(session.username)
+	else
+		http:write("no login")
+	end
+	http:close()
+end))
 
 -- register routes for the remotes
 for index, remote in pairs(remotes) do

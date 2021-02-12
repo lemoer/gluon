@@ -7,7 +7,7 @@ include ../gluon.mk
 
 define Package/gluon-controller
   TITLE:=Package to control gluon
-  DEPENDS:=+gluon-web +uhttpd +sse-multiplex
+  DEPENDS:=+gluon-web +uhttpd +sse-multiplex +rpcd
 endef
 
 define Package/gluon-controller/install
