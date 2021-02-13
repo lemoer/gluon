@@ -109,6 +109,8 @@ local function dispatch(config, http, request)
 					return _node({...})
 				end,
 
+				http = http,
+
 				entry = function(entry_path, target, title, order)
 					local c = _node(entry_path, true)
 
