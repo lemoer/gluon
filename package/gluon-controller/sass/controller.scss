@@ -75,6 +75,25 @@ h3 {
 	flex-direction: row;
 	align-items: stretch;
 
+	.login {
+		width: 400px;
+		margin: 50px auto;
+		text-align: center;
+		& div {
+			margin: 20px 0;
+			input {
+				width: 94%;
+			}
+			.gluon-button-submit {
+				width: 50%;
+			}
+		}
+
+		.error {
+			color: red;
+		}
+	}
+
 	& > .sidebar {
 		width: 300px;
 		padding: 0 30px;

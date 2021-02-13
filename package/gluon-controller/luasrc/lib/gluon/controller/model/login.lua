@@ -30,7 +30,7 @@ function f:write()
 	})
 
 	if not session then
-		f.description = "ERROR: Login failed!"
+		f.errmessage = "Error: Login failed!"
 		return
 	end
 

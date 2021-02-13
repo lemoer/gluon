@@ -70,7 +70,11 @@
 				<a class="manage-nodes" href="<%| url({'logout'}) %>">Logout</a>
 			</div>
 			<%- end %>
+			<%- if (#request > 0) and (request[1] == 'login') then -%>
+			<div class="login">
+			<%- else -%>
 			<div class="content">
+			<%- end %>
 				<% renderer.render(content, scope, pkg) %>
 			</div>
 		</div>
