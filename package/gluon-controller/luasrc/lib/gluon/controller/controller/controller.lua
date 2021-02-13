@@ -74,30 +74,23 @@ entry({"logout"}, call(function(http, renderer)
 	http:close()
 end))
 
-function needs_auth(target)
-	if session then
-		return target
-	else
-		return call(function (http, renderer)
-			http:status(403, "Forbidden")
-			renderer.render_layout("error/403", {
-				message =
-					"Not authorized.\n"
-			}, 'gluon-web')
-		end)
-	end
+session = get_session()
+if not session and (#request > 0) and (request[1] ~= 'login') then
+	-- To avoid leaking the available routes to unauthorized clients, we redirect
+	-- everything to the login page here.
+	http:redirect('/cgi-bin/controller/login')
+	http:close()
 end
 
-session = get_session()
 
-entry({"test"}, needs_auth(call(function(http, renderer)
+entry({"test"}, call(function(http, renderer)
 	if session then
 		http:write(session.username)
 	else
 		http:write("no login")
 	end
 	http:close()
-end)))
+end))
 
 
 -- register routes for the remotes

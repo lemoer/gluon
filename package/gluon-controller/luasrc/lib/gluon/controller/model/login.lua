@@ -35,7 +35,7 @@ function f:write()
 	end
 
 	http:header('Set-Cookie', 'ubus_rpc_session='..session.ubus_rpc_session..'; SameSite=lax')
-	http:redirect('/cgi-bin/controller/test')
+	http:redirect('/cgi-bin/controller/')
 end
 
 return f
