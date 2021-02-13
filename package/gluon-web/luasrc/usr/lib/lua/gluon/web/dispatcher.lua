@@ -111,6 +111,8 @@ local function dispatch(config, http, request)
 
 				http = http,
 
+				request = request,
+
 				entry = function(entry_path, target, title, order)
 					local c = _node(entry_path, true)
 
