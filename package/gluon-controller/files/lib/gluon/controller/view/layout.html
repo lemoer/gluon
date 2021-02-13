@@ -13,6 +13,30 @@
 		remotes[tonumber(remote.index)] = remote
 	end)
 
+	-- TODO: This is dupplicate, but I am currently not able to avoid this...
+	function get_session()
+		-- returns the session if it exists or return nil.
+
+		local ubus_rpc_session = http:getcookie("ubus_rpc_session")
+
+		if not ubus_rpc_session then
+			return nil
+		end
+
+		local conn = ubus.connect()
+		local session =  conn:call("session", "get", {
+			ubus_rpc_session=ubus_rpc_session
+		})
+
+		if not session then
+			return nil
+		end
+
+		return session.values
+	end
+
+	local session = get_session()
+
 	http:prepare_content("application/xhtml+xml")
 -%>
 <!DOCTYPE html>
@@ -27,6 +51,7 @@
 	</head>
 	<body data-node-address="<%| http:getenv('SERVER_ADDR') %>">
 		<div class="container">
+			<% if session then -%>
 			<div class="sidebar">
 				<h1>Gluon-Controller</h1>
 				<div class="remotes">
@@ -42,7 +67,9 @@
 					<% end %>
 				</div>
 				<a class="manage-nodes" href="<%| url({'nodes'}) %>">Manage Nodes</a>
+				<a class="manage-nodes" href="<%| url({'logout'}) %>">Logout</a>
 			</div>
+			<%- end %>
 			<div class="content">
 				<% renderer.render(content, scope, pkg) %>
 			</div>
