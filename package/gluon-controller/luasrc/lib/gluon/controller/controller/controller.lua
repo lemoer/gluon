@@ -24,25 +24,6 @@ uci:foreach('gluon-controller', 'remote', function(remote)
 	table.insert(remotes, remote)
 end)
 
-function login(username, password)
-	-- returns the session if it exists or return nil.
-	local conn = ubus.connect()
-	local session = conn:call("session", "login", {
-		username=username,
-		password=password
-	})
-
-	if not session then
-		-- TODO: login failed. flush something here
-		--foo();
-		print("TODO: out")
-		return
-	end
-
-	--print(session.ubus_rpc_session)
-	http:header('Set-Cookie', 'ubus_rpc_session='..session.ubus_rpc_session..'; SameSite=lax')
-end
-
 function get_session()
 	-- returns the session if it exists or return nil.
 
@@ -64,12 +45,8 @@ function get_session()
 	return session.values
 end
 
-
 function logout()
-	-- returns the session if it exists or return nil.
-
 	local ubus_rpc_session = http:getcookie("ubus_rpc_session")
-
 	if not ubus_rpc_session then
 		return nil
 	end
@@ -87,12 +64,9 @@ if #remotes > 0 then
 	entry({}, redirect({"nodes", remotes[1].nodeid}))
 end
 
---login("root", "test")
-entry({"login"}, call(function(http, renderer)
-	login("root", "test")
-	http:redirect('/cgi-bin/controller/test')
-	http:close()
-end))
+-- TODO: What is 40?
+entry({"login"}, model('login', { http=http }), _("Login"), 40)
+
 
 entry({"logout"}, call(function(http, renderer)
 	logout()
