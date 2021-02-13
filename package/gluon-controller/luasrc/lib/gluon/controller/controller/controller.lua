@@ -24,7 +24,7 @@ uci:foreach('gluon-controller', 'remote', function(remote)
 	table.insert(remotes, remote)
 end)
 
-function login(http, username, password)
+function login(username, password)
 	-- returns the session if it exists or return nil.
 	local conn = ubus.connect()
 	local session = conn:call("session", "login", {
@@ -43,7 +43,7 @@ function login(http, username, password)
 	http:header('Set-Cookie', 'ubus_rpc_session='..session.ubus_rpc_session..'; SameSite=lax')
 end
 
-function get_session(http)
+function get_session()
 	-- returns the session if it exists or return nil.
 
 	local ubus_rpc_session = http:getcookie("ubus_rpc_session")
@@ -65,7 +65,7 @@ function get_session(http)
 end
 
 
-function logout(http)
+function logout()
 	-- returns the session if it exists or return nil.
 
 	local ubus_rpc_session = http:getcookie("ubus_rpc_session")
@@ -89,26 +89,42 @@ end
 
 --login("root", "test")
 entry({"login"}, call(function(http, renderer)
-	login(http, "root", "test")
+	login("root", "test")
 	http:redirect('/cgi-bin/controller/test')
 	http:close()
 end))
 
 entry({"logout"}, call(function(http, renderer)
-	logout(http)
+	logout()
 	http:redirect('/cgi-bin/controller/test')
 	http:close()
 end))
 
-entry({"test"}, call(function(http, renderer)
-	local session = get_session(http)
+function needs_auth(target)
+	if session then
+		return target
+	else
+		return call(function (http, renderer)
+			http:status(403, "Forbidden")
+			renderer.render_layout("error/403", {
+				message =
+					"Not authorized.\n"
+			}, 'gluon-web')
+		end)
+	end
+end
+
+session = get_session()
+
+entry({"test"}, needs_auth(call(function(http, renderer)
 	if session then
 		http:write(session.username)
 	else
 		http:write("no login")
 	end
 	http:close()
-end))
+end)))
+
 
 -- register routes for the remotes
 for index, remote in pairs(remotes) do
