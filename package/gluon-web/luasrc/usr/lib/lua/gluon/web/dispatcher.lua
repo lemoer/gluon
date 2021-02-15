@@ -188,7 +188,9 @@ local function dispatch(config, http, request)
 		return
 	end
 
-	http:parse_input(node.filehandler)
+	if node.filehandler then
+		http:parse_input(node.filehandler)
+	end
 
 	local ok, err = pcall(node.target)
 	if not ok then
