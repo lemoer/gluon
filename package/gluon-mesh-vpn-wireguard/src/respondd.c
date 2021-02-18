@@ -31,6 +31,7 @@
 #include <libgluonutil.h>
 #include <uci.h>
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,14 +42,14 @@
 
 #include "libubus.h"
 
-
-static struct json_object * get_wgpeerselector_version(void) {
-	FILE *f = popen("exec wgpeerselector --version", "r");
+static struct json_object * stdout_read(const char *cmd, const char *skip, bool oneword) {
+	FILE *f = popen(cmd, "r");
 	if (!f)
 		return NULL;
 
 	char *line = NULL;
 	size_t len = 0;
+	size_t skiplen = strlen(skip);
 
 	ssize_t r = getline(&line, &len, f);
 
@@ -65,39 +66,45 @@ static struct json_object * get_wgpeerselector_version(void) {
 		line = NULL;
 	}
 
-	const char *version = line;
-	if (strncmp(version, "wgpeerselector ", 15) == 0)
-		version += 15;
+	const char *content = line;
+	if (strncmp(content, skip, skiplen) == 0)
+		content += skiplen;
 
-	struct json_object *ret = gluonutil_wrap_string(version);
+	if (oneword) {
+		for (int i = 0; i < len; i++){
+			if (isspace(line[i])) {
+				 line[i] = 0;
+			}
+		}
+	}
+
+	struct json_object *ret = gluonutil_wrap_string(content);
 	free(line);
 	return ret;
 }
 
+static struct json_object * get_wgpeerselector_version(void) {
+	return stdout_read("exec wgpeerselector --version", "wgpeerselector ", true);
+}
+
 static struct json_object * get_wireguard_public_key(void) {
-	FILE *f = popen("exec /lib/gluon/mesh-vpn/wireguard_pubkey.sh", "r");
-	if (!f)
-		return NULL;
+	return stdout_read("exec /lib/gluon/mesh-vpn/wireguard_pubkey.sh", "", false);
+}
 
-	char *line = NULL;
-	size_t len = 0;
+static struct json_object * get_wireguard_version(void) {
+	return stdout_read("exec wg -v", "wireguard-tools ", true);
+}
 
-	ssize_t r = getline(&line, &len, f);
+static bool wireguard_enabled(void) {
+	FILE *fd = popen("grep '^wireguard ' /proc/modules", "r");
+	if (!fd)
+		return false;
+	char buf[4];
+	size_t readable=0;
+	readable = fread(buf, 1, sizeof(buf), fd);
+	pclose(fd);
 
-	pclose(f);
-
-	if (r >= 0) {
-		len = strlen(line); /* The len given by getline is the buffer size, not the string length */
-
-		if (len && line[len-1] == '\n')
-			line[len-1] = 0;
-	}
-	else {
-		free(line);
-		line = NULL;
-	}
-
-	return gluonutil_wrap_and_free_string(line);
+	return (readable > 0);
 }
 
 static bool get_pubkey_privacy(void) {
@@ -124,7 +131,7 @@ end:
 	return ret;
 }
 
-static struct json_object * get_wgpeerselector(void) {
+static bool wgpeerselector_enabled(void) {
 	bool enabled = true;
 	struct json_object *ret = json_object_new_object();
 
@@ -149,9 +156,26 @@ disabled:
 	uci_free_context(ctx);
 
 disabled_nofree:
+	return enabled;
+}
+
+static struct json_object * get_wgpeerselector(void) {
+	bool enabled = wgpeerselector_enabled();
+
+	struct json_object *ret = json_object_new_object();
 	json_object_object_add(ret, "version", get_wgpeerselector_version());
 	json_object_object_add(ret, "enabled", json_object_new_boolean(enabled));
-	if (enabled && !get_pubkey_privacy())
+	return ret;
+}
+
+static struct json_object * get_wireguard(void) {
+	bool wg_enabled = wireguard_enabled();
+	bool wgp_enabled = wgpeerselector_enabled();
+
+	struct json_object *ret = json_object_new_object();
+	json_object_object_add(ret, "version", get_wireguard_version());
+	json_object_object_add(ret, "enabled", json_object_new_boolean(wg_enabled));
+	if (wg_enabled  && wgp_enabled && !get_pubkey_privacy())
 		json_object_object_add(ret, "public_key", get_wireguard_public_key());
 	return ret;
 }
@@ -160,6 +184,7 @@ static struct json_object * respondd_provider_nodeinfo(void) {
 	struct json_object *ret = json_object_new_object();
 
 	struct json_object *software = json_object_new_object();
+	json_object_object_add(software, "wireguard", get_wireguard());
 	json_object_object_add(software, "wgpeerselector", get_wgpeerselector());
 	json_object_object_add(ret, "software", software);
 
