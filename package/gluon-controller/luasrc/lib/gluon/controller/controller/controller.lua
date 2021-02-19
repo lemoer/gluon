@@ -183,41 +183,55 @@ if (#request > 0) and (request[1] == 'proxy') then
 	function chunk_handler()
 		obj = {
 			remaining_chunk = "",
-			new_data = function(chunk)
-				if not chunk then
-					return nil
+			new_data = function()
+				local data, err = sys_sock.recv(fd, 1024)
+				if data == "" then
+					os.exit(0)
 				end
 
-				obj.remaining_chunk = obj.remaining_chunk .. chunk;
-			end
+				obj.remaining_chunk = obj.remaining_chunk .. data;
+			end,
 			read_until_token = function(token, skip_token)
-				local cut_idx = obj.remaining_chunk:find(token);
-
-				if not cut_idx then
-					-- we haven't received the token yet
-					return nil
+				if #obj.remaining_chunk == 0 then
+					obj.new_data()
 				end
+				while true do
+					local cut_idx = obj.remaining_chunk:find(token);
 
-				if skip_token then
-					skip = #token;
-				else
-					skip = 0;
+					if cut_idx then
+						-- we haven't received the token yet
+						if skip_token then
+							skip = #token;
+						else
+							skip = 0;
+						end
+						local result = obj.remaining_chunk:sub(1, cut_idx-1)
+						obj.remaining_chunk = obj.remaining_chunk:sub(cut_idx + skip)
+
+						return result
+					else
+						obj.new_data()
+					end
 				end
-				local result = obj.remaining_chunk:sub(1, cut_idx)
-				obj.remaining_chunk = obj.remaining_chunk:sub(cut_idx + skip);
-
-				return result
 			end,
 			read_characters = function(length)
-				if #obj.remaining_chunk < length then
-					-- we haven't received enough characters
-					return nil
+				if #obj.remaining_chunk == 0 then
+					obj.new_data()
 				end
+				while true do
+					if #obj.remaining_chunk >= length then
+						-- we haven't received enough characters
+						local result = obj.remaining_chunk:sub(1, length)
+						obj.remaining_chunk = obj.remaining_chunk:sub(length+1)
 
-				local result = obj.remaining_chunk:sub(1, length)
-				obj.remaining_chunk = obj.remaining_chunk:sub(length);
-
-				return result
+						return result
+					else
+						obj.new_data()
+					end
+				end
+			end,
+			skip_chars = function(n)
+				obj.read_characters(n)
 			end
 		}
 
@@ -225,128 +239,21 @@ if (#request > 0) and (request[1] == 'proxy') then
 	end
 
 	local ch = chunk_handler()
-	-- local header2 = read_until_token('\r\n\r\n', true)
-	local header = ""
-	local header_finished = false
-	local chunk_len = 0
-	local buf = ""
-	--http:write("hey")
-	--http:status()
-	n = 1;
-	pump(function ()
-		local data, err = sys_sock.recv(fd, 1024)
-		if data == "" then
-			return nil
-		end
-		return data
-	end, function(chunk)
-		if not ch.new_data(chunk) then
-			-- EOT
-			return nil
-		end
+	local header_line
 
-		local header = ch.read_until_token('\r\n\r\n', true)
-		if not header then
-			return true
-		end
+	repeat
+		header_line = ch.read_until_token('\r\n', true)
+	until(header_line == '')
 
-		-- TODO: parse header
-		local len = ch.read_until_token('\r\n')
-		if not len then
-			return true
-		end
+	-- TODO: parse header
+
+	while true do
+		local len = ch.read_until_token('\r\n', true)
 		len = tonumber(len, 16)
-		local transfer_encoded_chunk = ch.read_characters(chunk, len)
-		if not transfer_encoded_chunk then
-			return true
-		end
-		http.output:write(transfer_encoded_chunk)
-
-		local len = ch.read_until_token(chunk, '\r\n')
-		if not len then
-			return true
-		end
-		len = tonumber(len, 16)
-		local transfer_encoded_chunk = ch.read_characters(chunk, len)
-		if not transfer_encoded_chunk then
-			return true
-		end
-		http.output:write(transfer_encoded_chunk)
-
-
-		return nil
-
-
-		-- http:write('header received')
-		-- http:write(header)
-		-- http:close()
-		--
-		-- --http:write('hi')
-		-- if not chunk then
-		-- 	return
-		-- end
-		-- if not header_finished thenl
-		-- 	-- strip first line (HTTP ...)
-		-- 	local idx = chunk:find('\r\n\r\n')
-		-- 	if not idx then
-		-- 		header = header + chunk
-		-- 		return
-		-- 	end
-		--
-		-- 	header = chunk:sub(0, idx+4)
-		-- 	chunk = chunk:sub(idx+4)
-		-- 	local idx2 = chunk:find('\r\n')
-		-- 	if not idx2 then
-		-- 		http:write('Status: 403\r\n\r\n')
-		-- 		http.output:write(header)
-		-- 		--http:write('hey '.. request_method..' '..request_path..query_string)
-		-- 		return false
-		-- 	end
-		-- 	chunk_len = tonumber(chunk:sub(0, idx2), 16)
-		-- 	chunk = chunk:sub(idx2+2)
-		-- 	header_finished = true
-		-- 	http.output:write('Status: ok\r\n\r\n')
-		-- 	--http.output:write('aaa')
-		--
-		-- end
-		--
-		-- if buf ~= "" then
-		-- 	chunk = buf..chunk
-		-- 	buf = ""
-		-- end
-		--
-		-- --http.output:write("\nHI("..tostring(#chunk)..'|'..tostring(chunk_len)..'|'..tostring(idx2)..")")
-		-- while chunk ~= "" do
-		-- 	--http.output:write("\nAA("..tostring(#chunk)..'|'..tostring(chunk_len)..'|'..tostring(idx2)..")")
-		-- 	if #chunk < chunk_len then
-		-- 		chunk_len = chunk_len - #chunk
-		-- 		http.output:write(chunk)
-		-- 		chunk = ""
-		-- 		--http.output:write("HEY")
-		-- 		--http.output:write("\nHA("..tostring(#chunk)..'|'..tostring(chunk_len)..'|'..tostring(idx2)..")")
-		-- 		return true
-		-- 	else
-		-- 		local wr = chunk:sub(0, chunk_len)
-		-- 		http.output:write(wr)
-		-- 		if chunk_len then
-		-- 			chunk = chunk:sub(chunk_len+2)
-		-- 		end
-		-- 		-- TODO: chunk might be too short now
-		-- 		local idx2 = chunk:find('\r\n')
-		-- 		if not idx2 then
-		-- 			--http.output:write("N")
-		-- 			chunk_len = 0
-		-- 			buf = chunk
-		-- 			return true
-		-- 		end
-		-- 		chunk_len = tonumber(chunk:sub(0, idx2), 16)
-		-- 		--http.output:write("chunk_len: [] "..tostring(chunk_len).."(-)"..tostring(#chunk))
-		-- 		chunk = chunk:sub(idx2+2)
-		-- 		--http.output:write("\nHO("..tostring(#chunk)..'|'..tostring(chunk_len)..'|'..tostring(idx2)..")")
-		-- 	end
-		-- end
-		-- return true
-	end)
+		local transfer_encoded_chunk = ch.read_characters(len)
+		ch.skip_chars(2)
+		http:write(transfer_encoded_chunk)
+	end
 
 	http.output:flush()
 	http.output:close()
