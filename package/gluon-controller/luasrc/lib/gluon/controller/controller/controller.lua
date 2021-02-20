@@ -239,20 +239,41 @@ if (#request > 0) and (request[1] == 'proxy') then
 	end
 
 	local ch = chunk_handler()
-	local header_line
+	local line
+	local first_line = true
+	local received_headers = {}
 
+	--  Read and parse the HTTP Header
 	repeat
-		header_line = ch.read_until_token('\r\n', true)
-	until(header_line == '')
+		line = ch.read_until_token('\r\n', true)
+		if first_line then
+			_, _, version, status, req = line:find("^HTTP/([%d.]*)%s(%d*)%s(%a*)")
+			http:status(tonumber(status), req)
+			first_line = false
+		else
+			local _, _, key, value = line:find("^([^:]*):%s*(.*)$")
+			if key then
+				received_headers[key] = value
+				if key ~= 'Connection' and key ~= 'Keep-Alive' and key ~= 'Transfer-Encoding' then
+					http:header(key, value)
+				end
+			end
+		end
+	until(line == '')
 
-	-- TODO: parse header
+	-- End of Header / Start of Content
 
-	while true do
-		local len = ch.read_until_token('\r\n', true)
-		len = tonumber(len, 16)
-		local transfer_encoded_chunk = ch.read_characters(len)
-		ch.skip_chars(2)
-		http:write(transfer_encoded_chunk)
+	if received_headers['Transfer-Encoding'] == 'chunked' then
+		while true do
+			local len = ch.read_until_token('\r\n', true)
+			len = tonumber(len, 16)
+			local transfer_encoded_chunk = ch.read_characters(len)
+			ch.skip_chars(2) -- skip '\r\n'
+			http:write(transfer_encoded_chunk)
+		end
+	else
+		local content = ch.read_characters(tonumber(received_headers['Content-Length']))
+		http:write(content)
 	end
 
 	http.output:flush()
