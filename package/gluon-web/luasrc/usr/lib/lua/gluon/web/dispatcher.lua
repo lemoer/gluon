@@ -11,7 +11,13 @@ local proto = require "gluon.web.http.protocol"
 
 
 local function build_url(http, path)
-	return (http:getenv("SCRIPT_NAME") or "") .. "/" .. table.concat(path, "/")
+	local prepend_path = ""
+	if http:formvalue('prepend_path') then
+		prepend_path = http:formvalue('prepend_path')
+	end
+	log = require 'posix.syslog'
+	log.syslog(log.LOG_DEBUG, 'hallo')
+	return prepend_path .. (http:getenv("SCRIPT_NAME") or "") .. "/" .. table.concat(path, "/")
 end
 
 

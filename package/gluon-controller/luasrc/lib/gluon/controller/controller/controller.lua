@@ -139,7 +139,7 @@ if (#request > 0) and (request[1] == 'proxy') then
 	else
 		query_string = '?'
 	end
-	query_string = query_string .. 'path_prepend=/cgi-bin/controller/proxy'
+	query_string = query_string .. 'prepend_path=/cgi-bin/controller/proxy'
 	local host = 'localhost'
 
 	-- We try to forward all http headers, that uhttpd provides in its environment

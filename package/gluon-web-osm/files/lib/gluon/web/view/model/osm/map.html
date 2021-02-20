@@ -1,5 +1,8 @@
+<%-
+	prepend_path=http:formvalue('prepend_path')
+-%>
 <div id="<%=id%>" class="gluon-osm-map" style="display: none"></div>
-<script type="text/javascript" src="/static/gluon-web-osm.js"></script>
+<script type="text/javascript" src="<%| prepend_path %>/static/gluon-web-osm.js"></script>
 <script type="text/javascript">
 	(function() {
 		var elMap = document.getElementById(<%=json(id)%>);

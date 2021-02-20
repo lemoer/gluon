@@ -1,5 +1,6 @@
 <%-
 	http:prepare_content("application/xhtml+xml")
+	prepend_path=http:formvalue('prepend_path')
 -%>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
@@ -9,7 +10,7 @@
 
 		<title><%:Error%></title>
 
-		<link rel="stylesheet" href="/static/status-page.css" type="text/css" />
+		<link rel="stylesheet" href="<%| prepend_path %>/static/status-page.css" type="text/css" />
 	</head>
 	<body>
 		<header>
