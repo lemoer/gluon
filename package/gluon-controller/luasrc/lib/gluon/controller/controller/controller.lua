@@ -75,6 +75,7 @@ entry({"logout"}, call(function(http, renderer)
 	http:close()
 end))
 
+
 session = get_session()
 if not session and ((#request < 1) or (request[1] ~= 'login')) then
 	-- To avoid leaking the available routes to unauthorized clients, we redirect
@@ -148,6 +149,7 @@ function proxy_request(host, port, request, prepend_path)
 	forward_header(fd, 'X-Forwarded-Host', 'HTTP_HOST')
 	send_header(fd, 'X-Forwarded-Proto', 'http')  -- TODO: this can either be http or https
 	forward_header(fd, 'User-Agent', 'HTTP_USER_AGENT')
+	forward_header(fd, 'Content-Length', 'CONTENT_LENGTH')
 	forward_header(fd, 'Content-Type', 'CONTENT_TYPE')
 	forward_header(fd, 'Accept', 'HTTP_ACCEPT')
 	forward_header(fd, 'Accept-Charset', 'HTTP_ACCEPT_CHARSET')
