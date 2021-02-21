@@ -15,8 +15,6 @@ local function build_url(http, path)
 	if http:formvalue('prepend_path') then
 		prepend_path = http:formvalue('prepend_path')
 	end
-	log = require 'posix.syslog'
-	log.syslog(log.LOG_DEBUG, 'hallo')
 	return prepend_path .. (http:getenv("SCRIPT_NAME") or "") .. "/" .. table.concat(path, "/")
 end
 
@@ -194,9 +192,7 @@ local function dispatch(config, http, request)
 		return
 	end
 
-	if node.filehandler then
-		http:parse_input(node.filehandler)
-	end
+	http:parse_input(node.filehandler)
 
 	local ok, err = pcall(node.target)
 	if not ok then
