@@ -110,11 +110,11 @@ local function pump(src, snk)
 	end
 end
 
-if (#request > 0) and (request[1] == 'proxy') then
+function proxy_request(host, port, request, prepend_path)
 	local sys_sock = require "posix.sys.socket"
 	local fd = sys_sock.socket(sys_sock.AF_INET, sys_sock.SOCK_STREAM, 0)
 
-	local res, errmsg, errcode = sys_sock.getaddrinfo ("127.0.0.1", 37009,
+	local res, errmsg, errcode = sys_sock.getaddrinfo (host, port,
 		{ family = sys_sock.IF_INET, socktype = sys_sock.SOCK_STREAM })
 	local addr = res[1];
 
@@ -129,8 +129,6 @@ if (#request > 0) and (request[1] == 'proxy') then
 		end
 	end
 
-	table.remove(request, 1)
-
 	local request_method = http:getenv('REQUEST_METHOD')
 	local request_path = '/'..table.concat(request, '/')
 	local query_string = http:getenv('QUERY_STRING')
@@ -139,7 +137,7 @@ if (#request > 0) and (request[1] == 'proxy') then
 	else
 		query_string = '?'
 	end
-	query_string = query_string .. 'prepend_path=/cgi-bin/controller/proxy'
+	query_string = query_string .. 'prepend_path=' .. prepend_path
 	local host = 'localhost'
 
 	-- We try to forward all http headers, that uhttpd provides in its environment
@@ -286,12 +284,22 @@ end
 for index, remote in pairs(remotes) do
 	local hostname = '[2001:678:978:199:5054:ff:fe12:3457]'
 
+	if (#request > 3) and (request[1] == 'nodes')
+		               and (request[2] == remote.nodeid)
+		               and (request[3] == 'proxy') then
+		table.remove(request, 1)
+		table.remove(request, 1)
+		table.remove(request, 1)
+		local prepend_path = '/cgi-bin/controller/nodes/'..remote.nodeid..'/proxy'
+		proxy_request('127.0.0.1', 37000+remote.index, request, prepend_path)
+	end
+
 	entry({"nodes", remote.nodeid},
 		redirect({"nodes", remote.nodeid, "status"}), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "status"},
 		iframe('http://['..remote.address..']/'), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "config"},
-		iframe('http://'..hostname..':'..tostring(37000+remote.index)..'/'), _("Information"), 1)
+		iframe('/cgi-bin/controller/nodes/'..remote.nodeid..'/proxy/cgi-bin/config/wizard'), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "map"},
 		iframe('https://hannover.freifunk.net/karte/#/en/map/'..remote.nodeid), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "stats"},
