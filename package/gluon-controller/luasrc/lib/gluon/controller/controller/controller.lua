@@ -119,7 +119,11 @@ function proxy_request(host, port, request, prepend_path)
 		{ family = sys_sock.IF_INET, socktype = sys_sock.SOCK_STREAM })
 	local addr = res[1];
 
-	sys_sock.connect(fd, addr)
+	if not sys_sock.connect(fd, addr) then
+		http:status(502)
+		http:prepare_content("text/html")
+		http:write("Connection to proxied host failed.")
+	end
 
 	function send_header(fd, header_name, value)
 		sys_sock.send(fd, header_name..': '..value..'\r\n')
