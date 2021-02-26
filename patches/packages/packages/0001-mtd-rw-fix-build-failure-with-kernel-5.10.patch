@@ -1,0 +1,65 @@
+From: David Bauer <mail@david-bauer.net>
+Date: Fri, 26 Feb 2021 15:38:15 +0100
+Subject: mtd-rw: fix build failure with kernel 5.10
+
+When building mtd-rw for a target based on Kernel 5.10 which has
+CONFIG_MTD disabled the build fails with
+
+ERROR: "put_mtd_device" [../mtd-rw.ko] undefined!
+ERROR: "get_mtd_device" [../mtd-rw.ko] undefined!
+
+Omit building the package for such a target.
+
+Signed-off-by: David Bauer <mail@david-bauer.net>
+
+diff --git a/kernel/mtd-rw/Makefile b/kernel/mtd-rw/Makefile
+index bcf60926f38129c76a4358f4a0a9a9ca8d4e8181..5cf1e5f42171a1a6a755d0d2d9ac8787996c8273 100644
+--- a/kernel/mtd-rw/Makefile
++++ b/kernel/mtd-rw/Makefile
+@@ -10,7 +10,7 @@ include $(INCLUDE_DIR)/kernel.mk
+ 
+ PKG_NAME:=mtd-rw
+ PKG_VERSION:=git-20160214
+-PKG_RELEASE:=1
++PKG_RELEASE:=2
+ 
+ PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+ PKG_MIRROR_HASH:=c44db17c3e05079116a1704f277642c9ce6f5ca4fa380c60f7e6d44509dc16be
+@@ -29,6 +29,7 @@ define KernelPackage/mtd-rw
+ 	SUBMENU:=Other modules
+ 	TITLE:=Write-enabler for MTD partitions
+ 	FILES:=$(PKG_BUILD_DIR)/mtd-rw.ko
++	DEPENDS:=@!(TARGET_x86||TARGET_bcm27xx||TARGET_octeontx)
+ endef
+ 
+ define KernelPackage/mtd-rw/description
+diff --git a/kernel/mtd-rw/patches/0001-mtd-disabled.patch b/kernel/mtd-rw/patches/0001-mtd-disabled.patch
+new file mode 100644
+index 0000000000000000000000000000000000000000..b21d9562f83864e8872f95bb7594a4a591d7c93d
+--- /dev/null
++++ b/kernel/mtd-rw/patches/0001-mtd-disabled.patch
+@@ -0,0 +1,24 @@
++--- a/mtd-rw.c
+++++ b/mtd-rw.c
++@@ -54,7 +54,11 @@ MODULE_PARM_DESC(i_want_a_brick, "Make a
++ 
++ static int set_writeable(unsigned n, bool w)
++ {
+++#ifndef CONFIG_MTD
+++	struct mtd_info *mtd = -ENOSYS;
+++#else
++ 	struct mtd_info *mtd = get_mtd_device(NULL, n);
+++#endif
++ 	int err;
++ 
++ 	if (IS_ERR(mtd)) {
++@@ -76,7 +80,9 @@ static int set_writeable(unsigned n, boo
++ 		err = 0;
++ 	}
++ 
+++#ifdef CONFIG_MTD
++ 	put_mtd_device(mtd);
+++#endif
++ 	return err;
++ }
++ 
