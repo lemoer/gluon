@@ -1,0 +1,37 @@
+From: lemoer <git@irrelefant.net>
+Date: Sat, 20 Mar 2021 20:42:21 +0100
+Subject: uacme: allow including run-uacme
+
+With this commit, the run-acme script can be included into other scripts 
+by setting INLCUDE_ONLY=1.
+
+diff --git a/net/uacme/files/run.sh b/net/uacme/files/run.sh
+index a3a451ece30611c0f2bda5b09fabe002fc2f6825..019cbad2a2f4be76f9fdd570cb85cbaed503459c 100644
+--- a/net/uacme/files/run.sh
++++ b/net/uacme/files/run.sh
+@@ -405,9 +405,11 @@ load_vars()
+     DEBUG=$(config_get "$section" debug)
+ }
+ 
+-check_cron
+-[ -n "$CHECK_CRON" ] && exit 0
+-[ -e "/var/run/acme_boot" ] && rm -f "/var/run/acme_boot" && exit 0
++if [ -z "$INCLUDE_ONLY" ]; then
++    check_cron
++    [ -n "$CHECK_CRON" ] && exit 0
++    [ -e "/var/run/acme_boot" ] && rm -f "/var/run/acme_boot" && exit 0
++fi
+ 
+ config_load acme
+ config_foreach load_vars acme
+@@ -423,6 +425,8 @@ fi
+ trap err_out HUP TERM
+ trap int_out INT
+ 
+-config_foreach issue_cert cert
++if [ -z "$INCLUDE_ONLY" ]; then
++    config_foreach issue_cert cert
+ 
+-exit 0
++    exit 0
++fi
