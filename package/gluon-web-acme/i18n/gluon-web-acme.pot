@@ -1,0 +1,24 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+msgid "SSL Certificate"
+msgstr ""
+
+msgid ""
+"Here you can configure your node to obtain SSL certificates using the Let'sEncrypt certificate "
+"authority. Please make sure that you configure the dns record appropriately after the node "
+"has rebooted to normal mode. You will find the ip address on the status page of the node. "
+"The node will obtain a staging certificate first and then a production certificate once "
+"the staging certificate is obtained successfully. This way we can ensure a reasonable "
+"retry interval of 2 minutes. By enabling this, you agree to to the terms of service of "
+"Let's Encrypt."
+msgstr ""
+
+msgid "Obtain SSL Certificate"
+msgstr ""
+
+msgid "Email"
+msgstr ""
+
+msgid "Domains"
+msgstr ""

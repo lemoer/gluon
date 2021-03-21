@@ -20,6 +20,10 @@ when(_'web-wizard' and (_'mesh-vpn-fastd' or _'mesh-vpn-tunneldigger'), {
 	'gluon-config-mode-mesh-vpn',
 })
 
+when(_'web-wizard' and _'acme', {
+	'gluon-web-acme',
+})
+
 
 feature('web-advanced', {
 	'gluon-web-admin',
