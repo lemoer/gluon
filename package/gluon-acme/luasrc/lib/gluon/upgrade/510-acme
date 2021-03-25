@@ -1,0 +1,44 @@
+#!/usr/bin/lua
+
+local sysconfig = require 'gluon.sysconfig'
+local util = require 'gluon.util'
+
+local uci = require('simple-uci').cursor()
+
+uci:section('firewall', 'rule', 'mesh_https', {
+	dest_port = 443,
+	src = 'mesh',
+	target = 'ACCEPT',
+	proto = 'tcp',
+})
+
+uci:section('firewall', 'rule', 'loc_client_https', {
+	dest_port = 443,
+	src = 'loc_client',
+	target = 'ACCEPT',
+	proto = 'tcp',
+})
+
+local acme = uci:get_first('acme', 'acme')
+if uci:get('acme', acme, 'account_email') == 'email@example.org' then
+	-- delete the default value from the uacme package
+	uci:delete('acme', acme, 'account_email')
+end
+
+uci:section('acme', 'cert', 'gluon_cert', {
+	enabled = uci:get_bool('acme', 'gluon_cert', 'enabled') or false,
+	keylength = 2048,
+	update_uhttpd = true,
+	webroot = '/lib/gluon/status-page/www/.well-known/acme-challenge',
+	use_staging = uci:get_bool('acme', 'gluon_cert', 'use_staging') or true,
+})
+
+if uci:get_bool('acme', 'gluon_cert', 'enabled') then
+	uci:set_list('uhttpd', 'main', 'listen_https', { '0.0.0.0:443', '[::]:443' })
+else
+	uci:set_list('uhttpd', 'main', 'listen_https', {})
+end
+
+uci:commit('acme')
+uci:commit('uhttpd')
+uci:commit('firewall')
