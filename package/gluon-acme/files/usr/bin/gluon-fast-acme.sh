@@ -11,7 +11,7 @@ gluon_is_staging() {
 }
 
 gluon_check_letsencrypt_reachability() {
-	ping -c 1 letsencrypt.org -w 1 > /dev/null
+	ping -c 1 letsencrypt.org -w 1 > /dev/null 2>/dev/null
 }
 
 gluon_set_cert_state() {
