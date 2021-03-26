@@ -2,7 +2,7 @@ From: lemoer <git@irrelefant.net>
 Date: Sat, 20 Mar 2021 20:42:21 +0100
 Subject: uacme: allow including run-uacme
 
-With this commit, the run-acme script can be included into other scripts 
+With this commit, the run-acme script can be included into other scripts
 by setting INLCUDE_ONLY=1.
 
 diff --git a/net/uacme/files/run.sh b/net/uacme/files/run.sh

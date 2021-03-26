@@ -25,6 +25,8 @@ INCLUDE_ONLY=1
 source /usr/share/uacme/run-uacme
 INCLUDE_ONLY=
 
+GLUON_STATE_DIR="$STATE_DIR";
+
 while true; do
 
 	# Wait until letsencrypt.org becomes reachable.
@@ -39,6 +41,11 @@ while true; do
 	fi
 	while ! gluon_check_letsencrypt_reachability; do :; done
 
+	# TODO: This is very hacky! issue_cert overrides the value of the global
+	# variable STATE_DIR in case of a staging certificate. However this is one
+	# way. If we want to obtain a production certificate, it is not corrected
+	# back to it's original value. So we reset it to its initial value here.
+	STATE_DIR="$GLUON_STATE_DIR"
 	issue_cert gluon_cert; ret=$?
 
 	if [ "$ret" -eq 0 ] || [ "$ret" -eq 1 ]; then

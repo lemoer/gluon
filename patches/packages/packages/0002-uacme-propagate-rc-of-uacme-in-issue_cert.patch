@@ -2,9 +2,9 @@ From: lemoer <git@irrelefant.net>
 Date: Sat, 20 Mar 2021 20:34:32 +0100
 Subject: uacme: propagate rc of uacme in issue_cert()
 
-Before this commit, issue_cert always returned 1 no matter if uacme 
-returned 1, 2, 3, ... With this commit, the return code of the uacme 
-binary is propagated. Therefore the caller of issue_cert can 
+Before this commit, issue_cert always returned 1 no matter if uacme
+returned 1, 2, 3, ... With this commit, the return code of the uacme
+binary is propagated. Therefore the caller of issue_cert can
 differentiate between "no renew necessary" and "an error occurred".
 
 diff --git a/net/uacme/files/run.sh b/net/uacme/files/run.sh

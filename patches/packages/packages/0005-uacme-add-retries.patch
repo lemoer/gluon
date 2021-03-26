@@ -1,0 +1,115 @@
+From 19dfb5e63585ceb9a27d8e69cd24295a8cad2407 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Leonardo=20M=C3=B6rlein?= <git@irrelefant.net>
+Date: Fri, 26 Mar 2021 23:04:32 +0100
+Subject: [PATCH] uacme: add retries
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Prior to this commit, the acme service attempted to obtain certificates
+once and then terminated, regardless of whether the certificate could be
+obtained or not. This commit introduces a new uci option "retries" to
+the "certificate" section. If this option is set to N, the acme service
+will attempt to obtain the certificate up to N times before terminating.
+There is a waiting pause between the retries to comply with the rate
+limits of Let'sEncrypt.
+
+The waiting pause is:
+-  2 minutes for staging certificates
+- 24 minutes for production certificates
+
+The current "Failed Validation" rate limits of Let'sEncrypt are:
+- staging:   60 per hour -> 1 failure every 1 minute in avg.
+- production: 5 per hour -> 1 failure every 12 minutes in avg.
+
+This means that we are within rate limits by a factor of two.
+
+By default the option "retries" is set to "1", which means that acme
+behaves as before by default. If the variable is set to "0", infinite
+retries are performed.
+
+This feature is helpful, when you already want to initiate the
+certificate request, but you are still waiting for your dns server to be
+configured, your network to appear or other conditions.
+
+Signed-off-by: Leonardo Mörlein <git@irrelefant.net>
+---
+ net/uacme/files/run.sh | 48 ++++++++++++++++++++++++++++++++++++++++--
+ 1 file changed, 46 insertions(+), 2 deletions(-)
+
+diff --git a/net/uacme/files/run.sh b/net/uacme/files/run.sh
+index 019cbad2a..e6a1461d5 100644
+--- a/net/uacme/files/run.sh
++++ b/net/uacme/files/run.sh
+@@ -236,7 +236,7 @@ issue_cert()
+     UPDATE_HAPROXY=$update_haproxy
+     USER_CLEANUP=$user_cleanup
+ 
+-    [ "$enabled" -eq "1" ] || return
++    [ "$enabled" -eq "1" ] || return 0
+ 
+     if [ "$APP" = "uacme" ]; then
+ 	[ "$DEBUG" -eq "1" ] && debug="--verbose --verbose"
+@@ -395,6 +395,50 @@ issue_cert()
+     post_checks
+ }
+ 
++issue_cert_with_retries() {
++	local section="$1"
++	local use_staging
++	local retries
++	local infinite_retries
++	config_get_bool use_staging "$section" use_staging
++	config_get retries "$section" retries
++
++	[ -z "$retries" ] && retries=1
++	[ "$retries" -eq "0" ] && infinite_retries=1
++
++	while true; do
++		issue_cert "$1"; ret=$?
++
++		if [ "$ret" -eq "2" ]; then
++			# An error occurred while retrieving the certificate.
++			retries="$((retries-1))"
++
++			if [ -z "$infinite_retries" ] && [ "$retries" -lt "1" ]; then
++				log "An error occurred while retrieving the certificate. Retries exceeded."
++				return "$ret"
++			fi
++
++			if [ "$use_staging" -eq "1" ]; then
++				# The "Failed Validations" limit of LetsEncrypt is 60 per hour. This
++				# means one failure every minute. Here we wait 2 minutes to be within
++				# limits for sure.
++				sleeptime=120
++			else
++				# There is a "Failed Validation" limit of LetsEncrypt is 5 failures per
++				# account, per hostname, per hour. This means one failure every 12
++				# minutes. Here we wait 25 minutes to be within limits for sure.
++				sleeptime=1500
++			fi
++
++			log "An error occurred while retrieving the certificate. Retrying in $sleeptime seconds."
++			sleep "$sleeptime"
++			continue
++		else
++			return "$ret";
++		fi
++	done
++}
++
+ load_vars()
+ {
+     local section="$1"
+@@ -426,7 +470,7 @@ trap err_out HUP TERM
+ trap int_out INT
+ 
+ if [ -z "$INCLUDE_ONLY" ]; then
+-    config_foreach issue_cert cert
++    config_foreach issue_cert_with_retries cert
+ 
+     exit 0
+ fi
+-- 
+2.30.1
+
