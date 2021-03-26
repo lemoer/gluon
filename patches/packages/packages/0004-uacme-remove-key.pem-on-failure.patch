@@ -1,0 +1,24 @@
+From: Leonardo Mörlein <me@irrelefant.net>
+Date: Fri, 26 Mar 2021 01:12:03 +0100
+Subject: uacme: remove key.pem on failure
+
+Before this commit when the account registration failed, the key.pem was
+still there and the script thought the account was successfully
+registered when it was started the next time.
+
+diff --git a/net/uacme/files/run.sh b/net/uacme/files/run.sh
+index 019cbad2a2f4be76f9fdd570cb85cbaed503459c..98c73a8307d86efe3bf39c9d4d9e16d0ccd4e1c7 100644
+--- a/net/uacme/files/run.sh
++++ b/net/uacme/files/run.sh
+@@ -260,7 +260,10 @@ issue_cert()
+     if [ "$APP" = "uacme" ]; then
+ 	if [ ! -f  "$STATE_DIR/private/key.pem" ]; then
+ 	    log "Create a new ACME account with email $ACCOUNT_EMAIL use staging=$use_staging"
+-	    $ACME $debug --confdir "$STATE_DIR" $staging --yes new $ACCOUNT_EMAIL
++	    if ! $ACME $debug --confdir "$STATE_DIR" $staging --yes new $ACCOUNT_EMAIL; then
++		rm -f "$STATE_DIR/private/key.pem";
++		return 2
++	    fi
+ 	fi
+ 
+ 	if [ -f "$STATE_DIR/$main_domain/cert.pem" ]; then
