@@ -162,4 +162,28 @@ function M.maxlength(val, max)
 	return false
 end
 
+function M.domain(val)
+	-- note that this is not perfect and will accept some invalid
+	-- domains like foo.-bar
+	return (val:match('^%w[%w-.]+$') ~= nil)
+end
+
+function M.email(val)
+	if val == nil then
+		return false
+	end
+
+	local at_pos = val:find('@')
+	if at_pos == nil or at_pos < 1 then
+		return false
+	end
+
+	-- As long as there is a local part with length greater than zero,
+	-- we do not really care about the local part. Some RFCs even
+	-- describe utf-8 local parts.
+
+	local domain = val:sub(at_pos+1)
+	return M.domain(domain)
+end
+
 return M

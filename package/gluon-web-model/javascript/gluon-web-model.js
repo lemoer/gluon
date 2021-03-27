@@ -13,7 +13,7 @@
 /*
 	Build using:
 
-	uglifyjs javascript/gluon-web-model.js -o files/lib/gluon/web/www/static/gluon-web-model.js -c -m --support-ie8
+	uglifyjs javascript/gluon-web-model.js -o files/lib/gluon/web/www/static/gluon-web-model.js -c -m
 */
 
 
@@ -125,6 +125,27 @@
 
 		'maxlength': function(max) {
 			return ((''+this).length <= +max);
+		},
+
+		'domain': function() {
+			// note that this is not perfect and will accept some invalid
+			// domains like foo.-bar
+			return (this.match(/^[a-zA-Z0-9][a-zA-Z0-9\-\.]*$/) != null);
+		},
+
+		'email': function() {
+			var v = ('' + this);
+			var at_pos = v.indexOf('@');
+
+			if (at_pos == -1 || at_pos < 1)
+				return false;
+
+			// As long as there is a local part with length greater than zero,
+			// we do not really care about the local part. Some RFCs even
+			// describe utf-8 local parts.
+
+			var domain = v.substr(at_pos + 1);
+			return validators.domain.apply(domain);
 		},
 	};
 
