@@ -34,11 +34,12 @@ local acme_enabled = s:option(Flag, "acme_enable", translate("Obtain SSL Certifi
 acme_enabled.default = uci:get_bool("acme", "gluon_cert", "enabled")
 
 local acme_email = s:option(Value, "acme_email", translate("Email"))
-acme_email.datatype = 'minlength(5)'
+acme_email.datatype = 'email'
 acme_email:depends(acme_enabled, true)
 acme_email.default = uci:get("acme", acme, "account_email")
 
 local acme_domains = s:option(DynamicList, "acme_domains", translate("Domains"))
+acme_domains.datatype = 'domain'
 acme_domains:depends(acme_enabled, true)
 acme_domains.default = uci:get_list("acme", "gluon_cert", "domains")
 
