@@ -10,6 +10,8 @@
 
 struct recv_ctx {
 	int fd;
+	bool header_consumed;
+
 	bool nodes_found;
 	struct json_tokener *tok;
 	bool tok_just_reset;
@@ -30,23 +32,6 @@ static void recv_cb(struct uclient *cl) {
 		}
 
 		int parsed_length = 0;
-
-		if (!ctx->nodes_found) {
-			const char *TOKEN = "\"nodes\":[";
-			const char *pos = memmem(buf, sizeof(buf), TOKEN, strlen(TOKEN));
-			if (pos) {
-				ctx->nodes_found = true;
-				parsed_length = pos + strlen(TOKEN) - buf;
-			} else {
-				// This shouldn't happen. If it still does, it's because TOKEN
-				// was not in the first chunk. Even though we do not know for
-				// sure, we assume it is. Furthermore there might be other edge
-				// cases, where the token is half part of
-				printf("ERRROR\n!");
-				exit(1337);
-			}
-		}
-
 		const char *begin = buf;
 
 		while (parsed_length < len) {
@@ -57,12 +42,9 @@ static void recv_cb(struct uclient *cl) {
 			if (ctx->tok_just_reset) {
 				ctx->tok_just_reset = false;
 
-				if (*begin == ',') {
+				if (*begin == '\n') {
 					parsed_length = 1;
 					continue;
-				} else if (*begin == ']') {
-					printf("done\n");
-					return;
 				}
 			}
 
@@ -70,17 +52,7 @@ static void recv_cb(struct uclient *cl) {
 			json_object * jobj = json_tokener_parse_ex(ctx->tok, begin, len);
 			jerr = json_tokener_get_error(ctx->tok);
 
-			if (write(ctx->fd, begin, len) < len) {
-				fputs("autoupdater: error: downloading firmware image failed: ", stderr);
-				perror(NULL);
-				return;
-			}
-
 			if (jerr != json_tokener_continue) {
-				//printf("finished\n");
-
-
-				//printf("jobj: %s\n---\n", json_object_to_json_string_ext(jobj, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY));
 				parsed_length = ctx->tok->char_offset;
 
 				if (jerr != json_tokener_success) {
@@ -88,6 +60,47 @@ static void recv_cb(struct uclient *cl) {
 					printf("%c%c%c%c%c%c%c%c%c\n", *(begin + parsed_length-8), *(begin + parsed_length-7), *(begin + parsed_length-6), *(begin + parsed_length-5), *(begin + parsed_length-4), *(begin + parsed_length-3), *(begin + parsed_length-2), *(begin + parsed_length-1), *(begin + parsed_length));
 					printf("%d %d\n", len, parsed_length);
 					exit(1);
+				}
+
+				if (!ctx->header_consumed) {
+					struct json_object *format = json_object_object_get(jobj, "format");
+					if (!format) {
+						fprintf(stderr, "Error: format is wrong\n");
+						exit(1);
+					}
+
+					if (json_object_get_type(format) != json_type_string) {
+						fprintf(stderr, "Error: format is wrong\n");
+						exit(1);
+					}
+
+					if (strcmp(json_object_get_string(format), "raw-nodes-jsonl") != 0) {
+						fprintf(stderr, "Error: format %s is unsupported.\n", json_object_get_string(format));
+						exit(1);
+					}
+
+					struct json_object *version = json_object_object_get(jobj, "version");
+
+					if (!version) {
+						fprintf(stderr, "Error: format is wrong\n");
+						exit(1);
+					}
+
+					if (json_object_get_type(version) != json_type_int) {
+						fprintf(stderr, "Error: format is wrong\n");
+						exit(1);
+					}
+
+					if (json_object_get_int(version) != 1) {
+						fprintf(stderr, "Error: version %d is unsupported.\n", json_object_get_int(version));
+						exit(1);
+					}
+
+					fprintf(stderr, "%d\n", json_object_get_int(version));
+
+					ctx->header_consumed = true;
+				} else {
+
 				}
 
 				json_object_put(jobj);
@@ -99,7 +112,6 @@ static void recv_cb(struct uclient *cl) {
 			} else {
 				// the whole buffer was consumed by json_tokener_parse_ex(), so
 				// we are done as of now.
-				//printf("continue\n");
 				break;
 			}
 		}
@@ -138,7 +150,7 @@ int main(int argc, char const *argv[]) {
 	/* code */
 	struct recv_ctx test = {};
 
-	const char *url = "https://hannover.freifunk.net/api/nodes.json";
+	const char *url = "https://harvester.ffh.zone/raw.jsonl";
 
 	uloop_init();
 	init_ustream_ssl();
