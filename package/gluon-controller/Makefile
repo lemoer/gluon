@@ -8,7 +8,7 @@ include $(INCLUDE_DIR)/cmake.mk
 
 define Package/gluon-controller
   TITLE:=Package to control gluon
-  DEPENDS:=+gluon-web +uhttpd +sse-multiplex +rpcd +libuclient +libuci +libjson-c
+  DEPENDS:=+gluon-web +uhttpd +sse-multiplex +rpcd +libuclient +libuci +libjson-c +autossh
 endef
 
 define Package/gluon-controller/install
