@@ -4,11 +4,15 @@
 #include <dlfcn.h>
 #include <glob.h>
 #include "uclient.h"
+#include <json-c/json.h>
 
 #define LIB_EXT "so"
 
 struct recv_ctx {
 	int fd;
+	bool nodes_found;
+	struct json_tokener *tok;
+	bool tok_just_reset;
 };
 
 struct ustream_ssl_ctx *ssl_ctx;
@@ -20,23 +24,84 @@ static void recv_cb(struct uclient *cl) {
 	int len;
 
 	while (true) {
-		printf(".");
-		fflush(stdout);
 		len = uclient_read_account(cl, buf, sizeof(buf));
-		if (len <= 0)
+		if (len <= 0) {
 			return;
+		}
 
-		printf(
-			"\rDownloading image: % 5zi / %zi KiB",
-			uclient_data(cl)->downloaded / 1024,
-			uclient_data(cl)->length / 1024
-		);
-		fflush(stdout);
+		int parsed_length = 0;
 
-		if (write(ctx->fd, buf, len) < len) {
-			fputs("autoupdater: error: downloading firmware image failed: ", stderr);
-			perror(NULL);
-			return;
+		if (!ctx->nodes_found) {
+			const char *TOKEN = "\"nodes\":[";
+			const char *pos = memmem(buf, sizeof(buf), TOKEN, strlen(TOKEN));
+			if (pos) {
+				ctx->nodes_found = true;
+				parsed_length = pos + strlen(TOKEN) - buf;
+			} else {
+				// This shouldn't happen. If it still does, it's because TOKEN
+				// was not in the first chunk. Even though we do not know for
+				// sure, we assume it is. Furthermore there might be other edge
+				// cases, where the token is half part of
+				printf("ERRROR\n!");
+				exit(1337);
+			}
+		}
+
+		const char *begin = buf;
+
+		while (parsed_length < len) {
+			begin += parsed_length;
+			len -= parsed_length;
+			parsed_length = 0;
+
+			if (ctx->tok_just_reset) {
+				ctx->tok_just_reset = false;
+
+				if (*begin == ',') {
+					parsed_length = 1;
+					continue;
+				} else if (*begin == ']') {
+					printf("done\n");
+					return;
+				}
+			}
+
+			enum json_tokener_error jerr;
+			json_object * jobj = json_tokener_parse_ex(ctx->tok, begin, len);
+			jerr = json_tokener_get_error(ctx->tok);
+
+			if (write(ctx->fd, begin, len) < len) {
+				fputs("autoupdater: error: downloading firmware image failed: ", stderr);
+				perror(NULL);
+				return;
+			}
+
+			if (jerr != json_tokener_continue) {
+				//printf("finished\n");
+
+
+				//printf("jobj: %s\n---\n", json_object_to_json_string_ext(jobj, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY));
+				parsed_length = ctx->tok->char_offset;
+
+				if (jerr != json_tokener_success) {
+					printf("error :(\n");
+					printf("%c%c%c%c%c%c%c%c%c\n", *(begin + parsed_length-8), *(begin + parsed_length-7), *(begin + parsed_length-6), *(begin + parsed_length-5), *(begin + parsed_length-4), *(begin + parsed_length-3), *(begin + parsed_length-2), *(begin + parsed_length-1), *(begin + parsed_length));
+					printf("%d %d\n", len, parsed_length);
+					exit(1);
+				}
+
+				json_object_put(jobj);
+
+				ctx->tok_just_reset = true;
+				json_tokener_reset(ctx->tok);
+				continue;
+
+			} else {
+				// the whole buffer was consumed by json_tokener_parse_ex(), so
+				// we are done as of now.
+				//printf("continue\n");
+				break;
+			}
 		}
 
 	}
@@ -77,6 +142,8 @@ int main(int argc, char const *argv[]) {
 
 	uloop_init();
 	init_ustream_ssl();
+
+	test.tok = json_tokener_new();
 
 	if (!ssl_ctx && !strncmp(url, "https", 5)) {
 		fprintf(stderr,
