@@ -37,6 +37,10 @@
 
 static const char *const user_agent = "Gluon Autoupdater (using libuclient)";
 
+extern struct ustream_ssl_ctx *ssl_ctx;
+extern const struct ustream_ssl_ops *ssl_ops;
+
+
 enum uclient_own_error_code {
 	UCLIENT_ERROR_REDIRECT_FAILED = 32,
 	UCLIENT_ERROR_TOO_MANY_REDIRECTS,
@@ -163,6 +167,8 @@ int get_url(const char *url, void (*read_cb)(struct uclient *cl), void *cb_data,
 	struct uclient *cl = uclient_new(url, NULL, &cb);
 	if (!cl)
 		goto err;
+
+	uclient_http_set_ssl_ctx(cl, ssl_ops, ssl_ctx, true);
 
 	cl->priv = &d;
 	if (uclient_set_timeout(cl, TIMEOUT_MSEC))
