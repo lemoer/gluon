@@ -167,7 +167,7 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 		}
 
 		if (version != 1) {
-			fprintf(stderr, "Error: version %d is unsupported.\n", version);
+			fprintf(stderr, "Error: format version %d is unsupported.\n", version);
 			exit(1);
 		}
 
