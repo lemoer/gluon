@@ -85,36 +85,36 @@ struct node *node_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 	return NULL;
 }
 
-void _node_uci_set_field(struct node *r, const char *option, const char *value) {
+void _node_uci_set_field(struct node *n, const char *option, const char *value) {
 	struct uci_ptr ptr = {
-		.package = r->ctx->uci_package->e.name,
-		.section = r->uci_section->e.name,
+		.package = n->ctx->uci_package->e.name,
+		.section = n->uci_section->e.name,
 		.option = option,
 		.value = value
 	};
 
-	uci_set(r->ctx->uci, &ptr);
-	r->ctx->uci_changed = true;
+	uci_set(n->ctx->uci, &ptr);
+	n->ctx->uci_changed = true;
 }
 
-void node_update_address(struct node *r, const char *new_address) {
-	if (!r->address || strcmp(r->address, new_address)) {
-		r->address = new_address;
-		_node_uci_set_field(r, "address", new_address);
-		printf("Updating address of node %s to '%s'.\n", r->nodeid, new_address);
-		r->ctx->address_changed = true;
+void node_update_address(struct node *n, const char *new_address) {
+	if (!n->address || strcmp(n->address, new_address)) {
+		n->address = new_address;
+		_node_uci_set_field(n, "address", new_address);
+		printf("Updating address of node %s to '%s'.\n", n->nodeid, new_address);
+		n->ctx->address_changed = true;
 	}
 }
 
-void node_update_name(struct node *r, const char *new_name) {
-	if (!r->name || strcmp(r->name, new_name)) {
-		r->name = new_name;
-		_node_uci_set_field(r, "name", new_name);
-		printf("Updating name of node %s to '%s'.\n", r->nodeid, new_name);
+void node_update_name(struct node *n, const char *new_name) {
+	if (!n->name || strcmp(n->name, new_name)) {
+		n->name = new_name;
+		_node_uci_set_field(n, "name", new_name);
+		printf("Updating name of node %s to '%s'.\n", n->nodeid, new_name);
 	}
 }
 
-void node_update_from_nodeinfo(struct node *r, json_object *nodeinfo) {
+void node_update_from_nodeinfo(struct node *n, json_object *nodeinfo) {
 	// maybe update address
 	struct json_object *addresses;
 	if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
@@ -122,7 +122,7 @@ void node_update_from_nodeinfo(struct node *r, json_object *nodeinfo) {
 
 	// only change the address, if the json says that the node
 	// does not have the old address anymore.
-	if (r->address && gluon_json_string_array_contains(addresses, r->address))
+	if (n->address && gluon_json_string_array_contains(addresses, n->address))
 		goto update_node_name;
 
 	while (json_object_array_length(addresses) > 0) {
@@ -131,7 +131,7 @@ void node_update_from_nodeinfo(struct node *r, json_object *nodeinfo) {
 		const char *address = json_object_get_string(address_j);
 
 		if (address && !is_ipv6_link_local(address)) {
-			node_update_address(r, address);
+			node_update_address(n, address);
 			break;
 		}
 
@@ -143,7 +143,7 @@ void node_update_from_nodeinfo(struct node *r, json_object *nodeinfo) {
 
 update_node_name:
 	if (gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
-		node_update_name(r, hostname);
+		node_update_name(n, hostname);
 }
 
 void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
