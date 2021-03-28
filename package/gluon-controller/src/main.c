@@ -22,7 +22,7 @@ struct recv_ctx {
 	bool address_changed;
 };
 
-struct remote {
+struct node {
 	const char *name;
 	const char *address;
 	const char *nodeid;
@@ -58,7 +58,7 @@ void close_uci(struct recv_ctx *ctx) {
 	uci_free_context(ctx->uci);
 }
 
-struct remote *remote_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
+struct node *node_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 	struct uci_element *e, *tmp;
 
 	uci_foreach_element_safe(&ctx->uci_package->sections, tmp, e) {
@@ -71,7 +71,7 @@ struct remote *remote_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 		if (!uci_nodeid || (strcmp(uci_nodeid, nodeid) != 0))
 			continue;
 
-		struct remote *r = malloc(sizeof(struct remote));
+		struct node *r = malloc(sizeof(struct node));
 		r->uci_section = s;
 		r->name = uci_lookup_option_string(ctx->uci, s, "name");
 		r->address = uci_lookup_option_string(ctx->uci, s, "address");
@@ -84,7 +84,7 @@ struct remote *remote_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 	return NULL;
 }
 
-void _remote_uci_set_field(struct remote *r, const char *option, const char *value) {
+void _node_uci_set_field(struct node *r, const char *option, const char *value) {
 	struct uci_ptr ptr = {
 		.package = r->ctx->uci_package->e.name,
 		.section = r->uci_section->e.name,
@@ -96,33 +96,33 @@ void _remote_uci_set_field(struct remote *r, const char *option, const char *val
 	r->ctx->uci_changed = true;
 }
 
-void remote_update_address(struct remote *r, const char *new_address) {
+void node_update_address(struct node *r, const char *new_address) {
 	if (!r->address || strcmp(r->address, new_address)) {
 		r->address = new_address;
-		_remote_uci_set_field(r, "address", new_address);
+		_node_uci_set_field(r, "address", new_address);
 		printf("updating address of node %s to '%s'.\n", r->nodeid, new_address);
 		r->ctx->address_changed = true;
 	}
 }
 
-void remote_update_name(struct remote *r, const char *new_name) {
+void node_update_name(struct node *r, const char *new_name) {
 	if (!r->name || strcmp(r->name, new_name)) {
 		r->name = new_name;
-		_remote_uci_set_field(r, "name", new_name);
+		_node_uci_set_field(r, "name", new_name);
 		printf("updating name of node %s to '%s'.\n", r->nodeid, new_name);
 	}
 }
 
-void remote_update_from_nodeinfo(struct remote *r, json_object *nodeinfo) {
+void node_update_from_nodeinfo(struct node *r, json_object *nodeinfo) {
 	// maybe update address
 	struct json_object *addresses;
 	if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
-		goto update_remote_name;
+		goto update_node_name;
 
-	// only change the address, if the json says that the remote
+	// only change the address, if the json says that the node
 	// does not have the old address anymore.
 	if (r->address && gluon_json_string_array_contains(addresses, r->address))
-		goto update_remote_name;
+		goto update_node_name;
 
 	while (json_object_array_length(addresses) > 0) {
 		int random_idx = rand() % json_object_array_length(addresses);
@@ -130,7 +130,7 @@ void remote_update_from_nodeinfo(struct remote *r, json_object *nodeinfo) {
 		const char *address = json_object_get_string(address_j);
 
 		if (address && !is_ipv6_link_local(address)) {
-			remote_update_address(r, address);
+			node_update_address(r, address);
 			break;
 		}
 
@@ -140,9 +140,9 @@ void remote_update_from_nodeinfo(struct remote *r, json_object *nodeinfo) {
 	// maybe update name
 	const char *hostname;
 
-update_remote_name:
+update_node_name:
 	if (gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
-		remote_update_name(r, hostname);
+		node_update_name(r, hostname);
 }
 
 void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
@@ -182,14 +182,14 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 			return;
 
 		// check if we are interested in this node
-		struct remote *remote = remote_find_by_nodeid(ctx, nodeid);
-		if (!remote)
+		struct node *node = node_find_by_nodeid(ctx, nodeid);
+		if (!node)
 			return;
 
 		if (ctx->debug)
-			printf("found node %s.\n", remote->nodeid);
+			printf("found node %s.\n", node->nodeid);
 
-		remote_update_from_nodeinfo(remote, nodeinfo);
+		node_update_from_nodeinfo(node, nodeinfo);
 	}
 }
 
