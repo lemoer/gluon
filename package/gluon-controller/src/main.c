@@ -197,6 +197,49 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 	}
 }
 
+void consume_chunk(struct recv_ctx *ctx, const char *pos, int len) {
+	int parsed_length = 0;
+
+	while (parsed_length < len) {
+		pos += parsed_length;
+		len -= parsed_length;
+		parsed_length = 0;
+
+		if (ctx->tok_just_reset) {
+			ctx->tok_just_reset = false;
+
+			if (*pos == '\n') {
+				parsed_length = 1;
+				continue;
+			}
+		}
+
+		enum json_tokener_error jerr;
+		json_object * jobj = json_tokener_parse_ex(ctx->tok, pos, len);
+		jerr = json_tokener_get_error(ctx->tok);
+
+		if (jerr == json_tokener_continue) {
+			// the whole buffer was consumed by json_tokener_parse_ex(), so
+			// we are done as of now.
+			break;
+		}
+
+		parsed_length = ctx->tok->char_offset;
+
+		if (jerr != json_tokener_success) {
+			fprintf(stderr, "Invalid format detected.\n");
+			exit(1);
+		}
+
+		consume_line_json(ctx, jobj);
+
+		json_object_put(jobj);
+
+		ctx->tok_just_reset = true;
+		json_tokener_reset(ctx->tok);
+	}
+}
+
 static void recv_cb(struct uclient *cl) {
 	struct recv_ctx *ctx = uclient_get_custom(cl);
 	char buf[1024];
@@ -208,52 +251,7 @@ static void recv_cb(struct uclient *cl) {
 			return;
 		}
 
-		int parsed_length = 0;
-		const char *begin = buf;
-
-		while (parsed_length < len) {
-			begin += parsed_length;
-			len -= parsed_length;
-			parsed_length = 0;
-
-			if (ctx->tok_just_reset) {
-				ctx->tok_just_reset = false;
-
-				if (*begin == '\n') {
-					parsed_length = 1;
-					continue;
-				}
-			}
-
-			enum json_tokener_error jerr;
-			json_object * jobj = json_tokener_parse_ex(ctx->tok, begin, len);
-			jerr = json_tokener_get_error(ctx->tok);
-
-			if (jerr != json_tokener_continue) {
-				parsed_length = ctx->tok->char_offset;
-
-				if (jerr != json_tokener_success) {
-					printf("error :(\n");
-					printf("%c%c%c%c%c%c%c%c%c\n", *(begin + parsed_length-8), *(begin + parsed_length-7), *(begin + parsed_length-6), *(begin + parsed_length-5), *(begin + parsed_length-4), *(begin + parsed_length-3), *(begin + parsed_length-2), *(begin + parsed_length-1), *(begin + parsed_length));
-					printf("%d %d\n", len, parsed_length);
-					exit(1);
-				}
-
-				consume_line_json(ctx, jobj);
-
-				json_object_put(jobj);
-
-				ctx->tok_just_reset = true;
-				json_tokener_reset(ctx->tok);
-				continue;
-
-			} else {
-				// the whole buffer was consumed by json_tokener_parse_ex(), so
-				// we are done as of now.
-				break;
-			}
-		}
-
+		consume_chunk(ctx, buf, len);
 	}
 }
 
