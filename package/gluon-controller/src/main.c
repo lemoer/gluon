@@ -11,7 +11,6 @@
 #define LIB_EXT "so"
 
 struct recv_ctx {
-	int fd;
 	bool header_consumed;
 
 	bool debug;
@@ -22,6 +21,7 @@ struct recv_ctx {
 	struct uci_context *uci;
 	struct uci_package *uci_package;
 	bool uci_changed;
+	bool address_changed;
 };
 
 struct ustream_ssl_ctx *ssl_ctx;
@@ -192,7 +192,6 @@ static void recv_cb(struct uclient *cl) {
 						printf("found node %s.\n", nodeid);
 
 					// maybe update address
-
 					const char *uci_address = uci_lookup_option_string(ctx->uci, section, "address");
 
 					struct json_object *network = json_object_object_get(nodeinfo, "network");
@@ -236,6 +235,7 @@ static void recv_cb(struct uclient *cl) {
 
 						uci_set(ctx->uci, &ptr);
 						printf("updating address of node %s to %s.\n", nodeid, new_address);
+						ctx->address_changed = true;
 						ctx->uci_changed = true;
 					}
 
@@ -337,10 +337,6 @@ int main(int argc, char const *argv[]) {
 	if (ssl_ctx)
 		init_ca_cert();
 
-	test.fd = open("/tmp/nodes.json", O_WRONLY | O_CREAT);
-
-	printf("open\n");
-
 	int err = get_url(url, &recv_cb, &test, -1);
 
 	if (err != 0) {
@@ -348,12 +344,13 @@ int main(int argc, char const *argv[]) {
 		goto out;
 	}
 
-	printf("after get_url()\n");
-
 out:
 	close_uci(&test);
-	close(test.fd);
 
-	printf("hey\n");
+	if (test.address_changed) {
+		printf("restarting gluon-controller service.\n");
+		system("/etc/init.d/gluon-controller restart");
+	}
+
 	return 0;
 }
