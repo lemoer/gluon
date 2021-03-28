@@ -24,9 +24,13 @@ is_layer3_device () {
 # shellcheck disable=SC2086
 interface_linklocal() {
         if is_layer3_device "$1"; then
-                ubus call network.interface dump | \
-                        jsonfilter -e "@.interface[@.l3_device='$1']['ipv6-address'][*].address" | \
-                        grep -e '^fe[89ab]' | head -n 1
+                if ! ubus call network.interface dump | \
+                     jsonfilter -e "@.interface[@.l3_device='$1']['ipv6-address'][*].address" | \
+                     grep -e '^fe[89ab][0-9a-f]' -m 1; then
+                        proto_notify_error "$config" "MISSING_LL_ADDR_ON_LOWER_IFACE"
+                        proto_block_restart "$config"
+                        exit 1
+                fi
                 return
         fi
 
