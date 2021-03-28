@@ -6,6 +6,7 @@
 #include "uclient.h"
 #include <uci.h>
 #include <json-c/json.h>
+#include <assert.h>
 #include <ctype.h>
 
 #define LIB_EXT "so"
@@ -71,6 +72,42 @@ struct uci_section *find_remote_section_by_nodeid(struct recv_ctx *ctx, const ch
 	return NULL;
 }
 
+bool gluon_json_get_path(json_object *obj, void *dest, enum json_type T, int depth, ...) {
+	va_list sp;
+
+	va_start(sp, depth);
+	json_object *el = obj;
+
+	for(int i = 0; i < depth; i++) {
+		const char *field_name = va_arg(sp, const char*);
+		el = json_object_object_get(el, field_name);
+
+		if (!el)
+			return false;
+	}
+
+	if (json_object_get_type(el) != T)
+		return false;
+
+	switch (T) {
+		case json_type_int:
+			*((int*) dest) = json_object_get_int(el);
+			break;
+		case json_type_string:
+			*((const char**) dest) = json_object_get_string(el);
+			break;
+		case json_type_array:
+			*((struct json_object **) dest) = el;
+			break;
+		default:
+			fprintf(stderr, "Error: gluon_json_get_path() NIY!\n");
+			exit(1);
+			assert(false); // NIY
+	}
+
+	return true;
+}
+
 bool is_ipv6_link_local(const char *address) {
 	if (strlen(address) < 3)
 		return false;
@@ -134,55 +171,39 @@ static void recv_cb(struct uclient *cl) {
 				}
 
 				if (!ctx->header_consumed) {
-					struct json_object *format = json_object_object_get(jobj, "format");
-					if (!format) {
-						fprintf(stderr, "Error: format is wrong\n");
+					const char *format;
+					int version;
+
+					if (!gluon_json_get_path(jobj, &format, json_type_string, 1, "format")) {
+						fprintf(stderr, "Error: format of data is unknown.\n");
 						exit(1);
 					}
 
-					if (json_object_get_type(format) != json_type_string) {
-						fprintf(stderr, "Error: format is wrong\n");
+					if (strcmp(format, "raw-nodes-jsonl") != 0) {
+						fprintf(stderr, "Error: format %s is unsupported.\n", format);
 						exit(1);
 					}
 
-					if (strcmp(json_object_get_string(format), "raw-nodes-jsonl") != 0) {
-						fprintf(stderr, "Error: format %s is unsupported.\n", json_object_get_string(format));
+					if (!gluon_json_get_path(jobj, &version, json_type_int, 1, "version")) {
+						fprintf(stderr, "Error: unexpectedly couldn't find version information in header.\n");
 						exit(1);
 					}
 
-					struct json_object *version = json_object_object_get(jobj, "version");
-
-					if (!version) {
-						fprintf(stderr, "Error: format is wrong\n");
+					if (version != 1) {
+						fprintf(stderr, "Error: version %d is unsupported.\n", version);
 						exit(1);
 					}
-
-					if (json_object_get_type(version) != json_type_int) {
-						fprintf(stderr, "Error: format is wrong\n");
-						exit(1);
-					}
-
-					if (json_object_get_int(version) != 1) {
-						fprintf(stderr, "Error: version %d is unsupported.\n", json_object_get_int(version));
-						exit(1);
-					}
-
-					fprintf(stderr, "%d\n", json_object_get_int(version));
 
 					ctx->header_consumed = true;
 				} else {
-
-					// lookup if we are interested in this node
-
 					struct json_object *nodeinfo = json_object_object_get(jobj, "nodeinfo");
 					if (!nodeinfo)
 						goto skip;
 
-					struct json_object *nodeid_j = json_object_object_get(nodeinfo, "node_id");
-					if (!nodeid_j)
+					// lookup if we are interested in this node
+					const char *nodeid;
+					if (!gluon_json_get_path(nodeinfo, &nodeid, json_type_string, 1, "node_id"))
 						goto skip;
-
-					const char *nodeid = json_object_get_string(nodeid_j);
 
 					struct uci_section *section = find_remote_section_by_nodeid(ctx, nodeid);
 					if (!section)
@@ -194,12 +215,8 @@ static void recv_cb(struct uclient *cl) {
 					// maybe update address
 					const char *uci_address = uci_lookup_option_string(ctx->uci, section, "address");
 
-					struct json_object *network = json_object_object_get(nodeinfo, "network");
-					if (!network)
-						goto skip_address_update;
-
-					struct json_object *addresses = json_object_object_get(network, "addresses");
-					if (!addresses || json_object_get_type(addresses) != json_type_array)
+					struct json_object *addresses;
+					if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
 						goto skip_address_update;
 
 					const char *new_address = NULL;
@@ -244,11 +261,10 @@ static void recv_cb(struct uclient *cl) {
 skip_address_update:
 					uci_name = uci_lookup_option_string(ctx->uci, section, "name");
 
-					struct json_object *hostname_j = json_object_object_get(nodeinfo, "hostname");
-					if (!hostname_j || json_object_get_type(hostname_j) != json_type_string)
+					const char *hostname;
+					if (!gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
 						goto skip_name_update;
 
-					const char *hostname = json_object_get_string(hostname_j);
 					if (!uci_name || strcmp(hostname, uci_name)) {
 						struct uci_ptr ptr = {
 							.package = ctx->uci_package->e.name,
