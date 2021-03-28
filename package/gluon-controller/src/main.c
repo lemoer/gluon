@@ -149,6 +149,54 @@ skip_address_update:
 		remote_update_name(r, hostname);
 }
 
+void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
+	if (!ctx->header_consumed) {
+		const char *format;
+		int version;
+
+		if (!gluon_json_get_path(line, &format, json_type_string, 1, "format")) {
+			fprintf(stderr, "Error: format of data is unknown.\n");
+			exit(1);
+		}
+
+		if (strcmp(format, "raw-nodes-jsonl") != 0) {
+			fprintf(stderr, "Error: format %s is unsupported.\n", format);
+			exit(1);
+		}
+
+		if (!gluon_json_get_path(line, &version, json_type_int, 1, "version")) {
+			fprintf(stderr, "Error: unexpectedly couldn't find version information in header.\n");
+			exit(1);
+		}
+
+		if (version != 1) {
+			fprintf(stderr, "Error: version %d is unsupported.\n", version);
+			exit(1);
+		}
+
+		ctx->header_consumed = true;
+	} else {
+		struct json_object *nodeinfo = json_object_object_get(line, "nodeinfo");
+		if (!nodeinfo)
+			return;
+
+		// lookup if we are interested in this node
+		const char *nodeid;
+		if (!gluon_json_get_path(nodeinfo, &nodeid, json_type_string, 1, "node_id"))
+			return;
+
+		// check if we are interested in this node
+		struct remote *remote = remote_find_by_nodeid(ctx, nodeid);
+		if (!remote)
+			return;
+
+		if (ctx->debug)
+			printf("found node %s.\n", remote->nodeid);
+
+		remote_update_from_nodeinfo(remote, nodeinfo);
+	}
+}
+
 static void recv_cb(struct uclient *cl) {
 	struct recv_ctx *ctx = uclient_get_custom(cl);
 	char buf[1024];
@@ -191,51 +239,8 @@ static void recv_cb(struct uclient *cl) {
 					exit(1);
 				}
 
-				if (!ctx->header_consumed) {
-					const char *format;
-					int version;
+				consume_line_json(ctx, jobj);
 
-					if (!gluon_json_get_path(jobj, &format, json_type_string, 1, "format")) {
-						fprintf(stderr, "Error: format of data is unknown.\n");
-						exit(1);
-					}
-
-					if (strcmp(format, "raw-nodes-jsonl") != 0) {
-						fprintf(stderr, "Error: format %s is unsupported.\n", format);
-						exit(1);
-					}
-
-					if (!gluon_json_get_path(jobj, &version, json_type_int, 1, "version")) {
-						fprintf(stderr, "Error: unexpectedly couldn't find version information in header.\n");
-						exit(1);
-					}
-
-					if (version != 1) {
-						fprintf(stderr, "Error: version %d is unsupported.\n", version);
-						exit(1);
-					}
-
-					ctx->header_consumed = true;
-				} else {
-					struct json_object *nodeinfo = json_object_object_get(jobj, "nodeinfo");
-					if (!nodeinfo)
-						goto skip;
-
-					// lookup if we are interested in this node
-					const char *nodeid;
-					if (!gluon_json_get_path(nodeinfo, &nodeid, json_type_string, 1, "node_id"))
-						goto skip;
-
-					struct remote *remote = remote_find_by_nodeid(ctx, nodeid);
-					if (!remote)
-						goto skip;
-
-					if (ctx->debug)
-						printf("found node %s.\n", remote->nodeid);
-
-					remote_update_from_nodeinfo(remote, nodeinfo);
-				}
-skip:
 				json_object_put(jobj);
 
 				ctx->tok_just_reset = true;
