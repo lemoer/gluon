@@ -4,7 +4,9 @@
 #include <dlfcn.h>
 #include <glob.h>
 #include "uclient.h"
+#include <uci.h>
 #include <json-c/json.h>
+#include <ctype.h>
 
 #define LIB_EXT "so"
 
@@ -15,10 +17,72 @@ struct recv_ctx {
 	bool nodes_found;
 	struct json_tokener *tok;
 	bool tok_just_reset;
+
+	struct uci_context *uci;
+	struct uci_package *uci_package;
 };
 
 struct ustream_ssl_ctx *ssl_ctx;
 const struct ustream_ssl_ops *ssl_ops;
+
+void load_uci(struct recv_ctx *ctx) {
+
+	ctx->uci = uci_alloc_context();
+
+	if (!ctx->uci) {
+		fprintf(stderr, "Error: Could not allocate uci context!\n");
+		exit(1);
+	}
+	ctx->uci->flags &= ~UCI_FLAG_STRICT;
+
+	if (uci_load(ctx->uci, "gluon-controller", &ctx->uci_package)) {
+		fprintf(stderr, "Error: Could not load uci package gluon-controller\n");
+		exit(1);
+	}
+}
+
+void close_uci(struct recv_ctx *ctx) {
+	uci_free_context(ctx->uci);
+}
+
+struct uci_section *find_remote_section_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
+	struct uci_element *e, *tmp;
+
+	uci_foreach_element_safe(&ctx->uci_package->sections, tmp, e) {
+		struct uci_section *s = uci_to_section(e);
+
+		if (strcmp(s->type, "remote") != 0)
+			continue;
+
+		const char *uci_nodeid = uci_lookup_option_string(ctx->uci, s, "nodeid");
+		if (!uci_nodeid || (strcmp(uci_nodeid, nodeid) != 0))
+			continue;
+
+		return s;
+	}
+
+	return NULL;
+}
+
+bool is_ipv6_link_local(const char *address) {
+	if (strlen(address) < 3)
+		return false;
+
+	if (!index(address, ':'))
+		return false;
+
+	if (address[0] != 'f' || address[1] != 'e')
+		return false;
+
+	const char *nibble_3 = "89ab";
+	if (!index(nibble_3, address[2]))
+		return false;
+
+	if (!isxdigit(address[4]))
+		return false;
+
+	return true;
+}
 
 static void recv_cb(struct uclient *cl) {
 	struct recv_ctx *ctx = uclient_get_custom(cl);
@@ -101,8 +165,79 @@ static void recv_cb(struct uclient *cl) {
 					ctx->header_consumed = true;
 				} else {
 
-				}
+					// lookup if we are interested in this node
 
+					struct json_object *nodeinfo = json_object_object_get(jobj, "nodeinfo");
+					if (!nodeinfo)
+						goto skip;
+
+					struct json_object *nodeid_j = json_object_object_get(nodeinfo, "node_id");
+					if (!nodeid_j)
+						goto skip;
+
+					const char *nodeid = json_object_get_string(nodeid_j);
+
+					struct uci_section *section = find_remote_section_by_nodeid(ctx, nodeid);
+					if (!section)
+						goto skip;
+
+					bool changed = false;
+
+					// maybe update address
+
+					const char *uci_address = uci_lookup_option_string(ctx->uci, section, "address");
+
+					struct json_object *network = json_object_object_get(nodeinfo, "network");
+					if (!network)
+						goto skip_address_update;
+
+					struct json_object *addresses = json_object_object_get(network, "addresses");
+					if (!addresses || json_object_get_type(addresses) != json_type_array)
+						goto skip_address_update;
+
+					const char *new_address = NULL;
+					bool update_address = true;
+					int random_idx = rand() % json_object_array_length(addresses);
+					for (int i = 0; i < json_object_array_length(addresses); i++) {
+						json_object *address_j = json_object_array_get_idx(addresses, i);
+						const char *address = json_object_get_string(address_j);
+						if (!address)
+							continue;
+
+						if (is_ipv6_link_local(address))
+							continue;
+
+						if (uci_address && !strcmp(address, uci_address)) {
+							// old address is still valid, so skip address
+							// update and keep old address
+							update_address = false;
+							break;
+						}
+
+						if (i == random_idx)
+							new_address = address;
+					}
+
+					if (update_address && new_address) {
+						printf("%s\n", new_address);
+						struct uci_ptr ptr = {
+							.package = ctx->uci_package->e.name,
+							.section = section->e.name,
+							.option = "address",
+							.value = new_address
+						};
+
+						uci_set(ctx->uci, &ptr);
+						uci_save(ctx->uci, ctx->uci_package);
+						uci_commit(ctx->uci, &ctx->uci_package, true);
+						printf("%s\n", "update");
+					}
+
+skip_address_update:
+					printf("%s\n", nodeid);
+
+				}
+skip:
 				json_object_put(jobj);
 
 				ctx->tok_just_reset = true;
@@ -152,8 +287,11 @@ int main(int argc, char const *argv[]) {
 
 	const char *url = "https://harvester.ffh.zone/raw.jsonl";
 
+	// init stuff
+	srand(time(NULL));
 	uloop_init();
 	init_ustream_ssl();
+	load_uci(&test);
 
 	test.tok = json_tokener_new();
 
@@ -184,6 +322,7 @@ int main(int argc, char const *argv[]) {
 	printf("after get_url()\n");
 
 out:
+	close_uci(&test);
 	close(test.fd);
 
 	printf("hey\n");
