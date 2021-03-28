@@ -166,7 +166,7 @@ bool is_ipv6_link_local(const char *address) {
 	if (!index(nibble_3, address[2]))
 		return false;
 
-	if (!isxdigit(address[4]))
+	if (!isxdigit(address[3]))
 		return false;
 
 	return true;
