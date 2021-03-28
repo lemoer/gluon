@@ -152,6 +152,20 @@ bool gluon_json_get_path(json_object *obj, void *dest, enum json_type T, int dep
 	return true;
 }
 
+bool gluon_json_string_array_contains(json_object *haystack, const char *needle) {
+	for (int i = 0; i < json_object_array_length(haystack); i++) {
+		json_object *el = json_object_array_get_idx(haystack, i);
+		const char *str = json_object_get_string(el);
+		if (!str)
+			continue;
+
+		if (!strcmp(str, needle))
+			return true;
+	}
+
+	return false;
+}
+
 bool is_ipv6_link_local(const char *address) {
 	if (strlen(address) < 3)
 		return false;
@@ -171,6 +185,7 @@ bool is_ipv6_link_local(const char *address) {
 
 	return true;
 }
+
 
 static void recv_cb(struct uclient *cl) {
 	struct recv_ctx *ctx = uclient_get_custom(cl);
@@ -261,26 +276,23 @@ static void recv_cb(struct uclient *cl) {
 					if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
 						goto skip_address_update;
 
+					// only change the address, if the json says that the remote
+					// does not have the old address anymore.
+					if (remote->address && gluon_json_string_array_contains(addresses, remote->address))
+						goto skip_address_update;
+
 					const char *new_address = NULL;
-					int random_idx = rand() % json_object_array_length(addresses);
-					for (int i = 0; i < json_object_array_length(addresses); i++) {
-						json_object *address_j = json_object_array_get_idx(addresses, i);
+					while (json_object_array_length(addresses) > 0) {
+						int random_idx = rand() % json_object_array_length(addresses);
+						json_object *address_j = json_object_array_get_idx(addresses, random_idx);
 						const char *address = json_object_get_string(address_j);
-						if (!address)
-							continue;
 
-						if (is_ipv6_link_local(address))
-							continue;
-
-						if (remote->address && !strcmp(address, remote->address)) {
-							// old address is still valid, so skip address
-							// update and keep old address
-							new_address = remote->address;
+						if (address && !is_ipv6_link_local(address)) {
+							new_address = address;
 							break;
 						}
 
-						if (i == random_idx)
-							new_address = address;
+						json_object_array_del_idx(addresses, random_idx, 1);
 					}
 
 					if (new_address)
