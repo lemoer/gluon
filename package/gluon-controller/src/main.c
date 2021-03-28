@@ -53,7 +53,15 @@ void close_uci(struct recv_ctx *ctx) {
 	uci_free_context(ctx->uci);
 }
 
-struct uci_section *find_remote_section_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
+struct remote {
+	const char *name;
+	const char *address;
+	const char *nodeid;
+	struct uci_section* uci_section;
+	struct recv_ctx* ctx;
+};
+
+struct remote *remote_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 	struct uci_element *e, *tmp;
 
 	uci_foreach_element_safe(&ctx->uci_package->sections, tmp, e) {
@@ -66,10 +74,46 @@ struct uci_section *find_remote_section_by_nodeid(struct recv_ctx *ctx, const ch
 		if (!uci_nodeid || (strcmp(uci_nodeid, nodeid) != 0))
 			continue;
 
-		return s;
+		struct remote *r = malloc(sizeof(struct remote));
+		r->uci_section = s;
+		r->name = uci_lookup_option_string(ctx->uci, s, "name");
+		r->address = uci_lookup_option_string(ctx->uci, s, "address");
+		r->nodeid = nodeid;
+		r->ctx = ctx;
+
+		return r;
 	}
 
 	return NULL;
+}
+
+void _remote_uci_set_field(struct remote *r, const char *option, const char *value) {
+	struct uci_ptr ptr = {
+		.package = r->ctx->uci_package->e.name,
+		.section = r->uci_section->e.name,
+		.option = option,
+		.value = value
+	};
+
+	uci_set(r->ctx->uci, &ptr);
+	r->ctx->uci_changed = true;
+}
+
+void remote_update_address(struct remote *r, const char *new_address) {
+	if (!r->address || strcmp(r->address, new_address)) {
+		r->address = new_address;
+		_remote_uci_set_field(r, "address", new_address);
+		printf("updating address of node %s to '%s'.\n", r->nodeid, new_address);
+		r->ctx->address_changed = true;
+	}
+}
+
+void remote_update_name(struct remote *r, const char *new_name) {
+	if (!r->name || strcmp(r->name, new_name)) {
+		r->name = new_name;
+		_remote_uci_set_field(r, "name", new_name);
+		printf("updating name of node %s to '%s'.\n", r->nodeid, new_name);
+	}
 }
 
 bool gluon_json_get_path(json_object *obj, void *dest, enum json_type T, int depth, ...) {
@@ -205,22 +249,19 @@ static void recv_cb(struct uclient *cl) {
 					if (!gluon_json_get_path(nodeinfo, &nodeid, json_type_string, 1, "node_id"))
 						goto skip;
 
-					struct uci_section *section = find_remote_section_by_nodeid(ctx, nodeid);
-					if (!section)
+					struct remote *remote = remote_find_by_nodeid(ctx, nodeid);
+					if (!remote)
 						goto skip;
 
 					if (ctx->debug)
-						printf("found node %s.\n", nodeid);
+						printf("found node %s.\n", remote->nodeid);
 
 					// maybe update address
-					const char *uci_address = uci_lookup_option_string(ctx->uci, section, "address");
-
 					struct json_object *addresses;
 					if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
 						goto skip_address_update;
 
 					const char *new_address = NULL;
-					bool update_address = true;
 					int random_idx = rand() % json_object_array_length(addresses);
 					for (int i = 0; i < json_object_array_length(addresses); i++) {
 						json_object *address_j = json_object_array_get_idx(addresses, i);
@@ -231,10 +272,10 @@ static void recv_cb(struct uclient *cl) {
 						if (is_ipv6_link_local(address))
 							continue;
 
-						if (uci_address && !strcmp(address, uci_address)) {
+						if (remote->address && !strcmp(address, remote->address)) {
 							// old address is still valid, so skip address
 							// update and keep old address
-							update_address = false;
+							new_address = remote->address;
 							break;
 						}
 
@@ -242,42 +283,16 @@ static void recv_cb(struct uclient *cl) {
 							new_address = address;
 					}
 
-					if (update_address && new_address) {
-						struct uci_ptr ptr = {
-							.package = ctx->uci_package->e.name,
-							.section = section->e.name,
-							.option = "address",
-							.value = new_address
-						};
+					if (new_address)
+						remote_update_address(remote, new_address);
 
-						uci_set(ctx->uci, &ptr);
-						printf("updating address of node %s to %s.\n", nodeid, new_address);
-						ctx->address_changed = true;
-						ctx->uci_changed = true;
-					}
-
-					// maybe update name
-					const char *uci_name;
-skip_address_update:
-					uci_name = uci_lookup_option_string(ctx->uci, section, "name");
-
+					// maybe update hostname
 					const char *hostname;
+skip_address_update:
 					if (!gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
 						goto skip_name_update;
 
-					if (!uci_name || strcmp(hostname, uci_name)) {
-						struct uci_ptr ptr = {
-							.package = ctx->uci_package->e.name,
-							.section = section->e.name,
-							.option = "name",
-							.value = hostname
-						};
-
-						uci_set(ctx->uci, &ptr);
-						printf("updating name of node %s to '%s'.\n", nodeid, hostname);
-						ctx->uci_changed = true;
-					}
-
+					remote_update_name(remote, hostname);
 				}
 skip_name_update:
 skip:
