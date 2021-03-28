@@ -14,12 +14,14 @@ struct recv_ctx {
 	int fd;
 	bool header_consumed;
 
+	bool debug;
 	bool nodes_found;
 	struct json_tokener *tok;
 	bool tok_just_reset;
 
 	struct uci_context *uci;
 	struct uci_package *uci_package;
+	bool uci_changed;
 };
 
 struct ustream_ssl_ctx *ssl_ctx;
@@ -42,6 +44,11 @@ void load_uci(struct recv_ctx *ctx) {
 }
 
 void close_uci(struct recv_ctx *ctx) {
+	if (ctx->uci_changed) {
+		uci_save(ctx->uci, ctx->uci_package);
+		uci_commit(ctx->uci, &ctx->uci_package, true);
+	}
+
 	uci_free_context(ctx->uci);
 }
 
@@ -181,7 +188,8 @@ static void recv_cb(struct uclient *cl) {
 					if (!section)
 						goto skip;
 
-					bool changed = false;
+					if (ctx->debug)
+						printf("found node %s.\n", nodeid);
 
 					// maybe update address
 
@@ -219,7 +227,6 @@ static void recv_cb(struct uclient *cl) {
 					}
 
 					if (update_address && new_address) {
-						printf("%s\n", new_address);
 						struct uci_ptr ptr = {
 							.package = ctx->uci_package->e.name,
 							.section = section->e.name,
@@ -228,15 +235,35 @@ static void recv_cb(struct uclient *cl) {
 						};
 
 						uci_set(ctx->uci, &ptr);
-						uci_save(ctx->uci, ctx->uci_package);
-						uci_commit(ctx->uci, &ctx->uci_package, true);
-						printf("%s\n", "update");
+						printf("updating address of node %s to %s.\n", nodeid, new_address);
+						ctx->uci_changed = true;
 					}
 
+					// maybe update name
+					const char *uci_name;
 skip_address_update:
-					printf("%s\n", nodeid);
+					uci_name = uci_lookup_option_string(ctx->uci, section, "name");
+
+					struct json_object *hostname_j = json_object_object_get(nodeinfo, "hostname");
+					if (!hostname_j || json_object_get_type(hostname_j) != json_type_string)
+						goto skip_name_update;
+
+					const char *hostname = json_object_get_string(hostname_j);
+					if (!uci_name || strcmp(hostname, uci_name)) {
+						struct uci_ptr ptr = {
+							.package = ctx->uci_package->e.name,
+							.section = section->e.name,
+							.option = "name",
+							.value = hostname
+						};
+
+						uci_set(ctx->uci, &ptr);
+						printf("updating name of node %s to '%s'.\n", nodeid, hostname);
+						ctx->uci_changed = true;
+					}
 
 				}
+skip_name_update:
 skip:
 				json_object_put(jobj);
 
@@ -283,7 +310,9 @@ static void init_ca_cert(void)
 
 int main(int argc, char const *argv[]) {
 	/* code */
-	struct recv_ctx test = {};
+	struct recv_ctx test = {
+		.debug = true
+	};
 
 	const char *url = "https://harvester.ffh.zone/raw.jsonl";
 
