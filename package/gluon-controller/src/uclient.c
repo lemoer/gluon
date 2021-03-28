@@ -81,6 +81,7 @@ static void init_ca_cert(void)
 
 
 void init_get_url() {
+	uloop_init();
 	init_ustream_ssl();
 
 	if (ssl_ctx)

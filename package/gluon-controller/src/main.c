@@ -4,11 +4,12 @@
 #include <json-c/json.h>
 #include <assert.h>
 #include <ctype.h>
+#include <unistd.h>
 #include "util.h"
 #include "uclient.h"
 
 struct recv_ctx {
-	bool debug;
+	bool verbose;
 
 	// json stream parsing
 	bool header_consumed;
@@ -186,7 +187,7 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 		if (!node)
 			return;
 
-		if (ctx->debug)
+		if (ctx->verbose)
 			printf("found node %s.\n", node->nodeid);
 
 		node_update_from_nodeinfo(node, nodeinfo);
@@ -251,23 +252,58 @@ static void recv_cb(struct uclient *cl) {
 	}
 }
 
-int main(int argc, char const *argv[]) {
-	/* code */
-	struct recv_ctx test = {
-		.debug = true
-	};
+void help(const char *prog) {
+	fprintf(stderr, "Usage: %s [-v] URL\n", prog);
+	fprintf(stderr, "\n");
+	fprintf(stderr, "-h         display this help\n");
+	fprintf(stderr, "-v         verbose logging\n");
+	fprintf(stderr, "URL        http or https url of raw.jsonl nodes file\n");
+	fprintf(stderr, "\n");
+	exit(0);
+}
 
-	const char *url = "https://harvester.ffh.zone/raw.jsonl";
+int main(int argc, char *argv[]) {
+	struct recv_ctx ctx = {};
+	char c;
+	opterr = 0;
+
+	while ((c = getopt(argc, argv, "hv")) != -1) {
+		switch (c)
+		{
+			case 'h':
+				help(argv[0]);
+				break;
+			case 'v':
+				ctx.verbose = true;
+				break;
+			case '?':
+				if (isprint (optopt))
+					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+				else
+					fprintf (stderr,
+						"Unknown option character `\\x%x'.\n",
+						optopt);
+						return 1;
+			default:
+				abort();
+		}
+	}
+
+	if (optind >= argc) {
+		help(argv[0]);
+		exit(1);
+	}
+
+	const char *url = argv[optind];
 
 	// init stuff
 	srand(time(NULL));
-	uloop_init();
-	load_uci(&test);
+	load_uci(&ctx);
 	init_get_url();
 
-	test.tok = json_tokener_new();
+	ctx.tok = json_tokener_new();
 
-	int err = get_url(url, &recv_cb, &test, -1);
+	int err = get_url(url, &recv_cb, &ctx, -1);
 
 	if (err != 0) {
 		printf("error: %s\n", uclient_get_errmsg(err));
@@ -275,9 +311,9 @@ int main(int argc, char const *argv[]) {
 	}
 
 out:
-	close_uci(&test);
+	close_uci(&ctx);
 
-	if (test.address_changed) {
+	if (ctx.address_changed) {
 		printf("restarting gluon-controller service.\n");
 		system("/etc/init.d/gluon-controller restart");
 	}
