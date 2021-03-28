@@ -20,6 +20,7 @@ include_directories(${UBOX_INCLUDE_DIR})
 
 add_executable(gluon-controller-update-nodes
   main.c
+  util.c
   uclient.c
 )
 set_property(TARGET gluon-controller-update-nodes PROPERTY COMPILE_FLAGS "-std=c99 -Wall ${JSON_C_CFLAGS_OTHER}")

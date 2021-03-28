@@ -3,11 +3,12 @@
 #include <fcntl.h>
 #include <dlfcn.h>
 #include <glob.h>
-#include "uclient.h"
 #include <uci.h>
 #include <json-c/json.h>
 #include <assert.h>
 #include <ctype.h>
+#include "util.h"
+#include "uclient.h"
 
 #define LIB_EXT "so"
 
@@ -116,76 +117,37 @@ void remote_update_name(struct remote *r, const char *new_name) {
 	}
 }
 
-bool gluon_json_get_path(json_object *obj, void *dest, enum json_type T, int depth, ...) {
-	va_list sp;
+void remote_update_from_nodeinfo(struct remote *r, json_object *nodeinfo) {
+	// maybe update address
+	struct json_object *addresses;
+	if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
+		goto skip_address_update;
 
-	va_start(sp, depth);
-	json_object *el = obj;
+	// only change the address, if the json says that the remote
+	// does not have the old address anymore.
+	if (r->address && gluon_json_string_array_contains(addresses, r->address))
+		goto skip_address_update;
 
-	for(int i = 0; i < depth; i++) {
-		const char *field_name = va_arg(sp, const char*);
-		el = json_object_object_get(el, field_name);
+	while (json_object_array_length(addresses) > 0) {
+		int random_idx = rand() % json_object_array_length(addresses);
+		json_object *address_j = json_object_array_get_idx(addresses, random_idx);
+		const char *address = json_object_get_string(address_j);
 
-		if (!el)
-			return false;
+		if (address && !is_ipv6_link_local(address)) {
+			remote_update_address(r, address);
+			break;
+		}
+
+		json_object_array_del_idx(addresses, random_idx, 1);
 	}
 
-	if (json_object_get_type(el) != T)
-		return false;
+	// maybe update hostname
+	const char *hostname;
 
-	switch (T) {
-		case json_type_int:
-			*((int*) dest) = json_object_get_int(el);
-			break;
-		case json_type_string:
-			*((const char**) dest) = json_object_get_string(el);
-			break;
-		case json_type_array:
-			*((struct json_object **) dest) = el;
-			break;
-		default:
-			fprintf(stderr, "Error: gluon_json_get_path() NIY!\n");
-			exit(1);
-			assert(false); // NIY
-	}
-
-	return true;
+skip_address_update:
+	if (gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
+		remote_update_name(r, hostname);
 }
-
-bool gluon_json_string_array_contains(json_object *haystack, const char *needle) {
-	for (int i = 0; i < json_object_array_length(haystack); i++) {
-		json_object *el = json_object_array_get_idx(haystack, i);
-		const char *str = json_object_get_string(el);
-		if (!str)
-			continue;
-
-		if (!strcmp(str, needle))
-			return true;
-	}
-
-	return false;
-}
-
-bool is_ipv6_link_local(const char *address) {
-	if (strlen(address) < 3)
-		return false;
-
-	if (!index(address, ':'))
-		return false;
-
-	if (address[0] != 'f' || address[1] != 'e')
-		return false;
-
-	const char *nibble_3 = "89ab";
-	if (!index(nibble_3, address[2]))
-		return false;
-
-	if (!isxdigit(address[3]))
-		return false;
-
-	return true;
-}
-
 
 static void recv_cb(struct uclient *cl) {
 	struct recv_ctx *ctx = uclient_get_custom(cl);
@@ -271,42 +233,8 @@ static void recv_cb(struct uclient *cl) {
 					if (ctx->debug)
 						printf("found node %s.\n", remote->nodeid);
 
-					// maybe update address
-					struct json_object *addresses;
-					if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
-						goto skip_address_update;
-
-					// only change the address, if the json says that the remote
-					// does not have the old address anymore.
-					if (remote->address && gluon_json_string_array_contains(addresses, remote->address))
-						goto skip_address_update;
-
-					const char *new_address = NULL;
-					while (json_object_array_length(addresses) > 0) {
-						int random_idx = rand() % json_object_array_length(addresses);
-						json_object *address_j = json_object_array_get_idx(addresses, random_idx);
-						const char *address = json_object_get_string(address_j);
-
-						if (address && !is_ipv6_link_local(address)) {
-							new_address = address;
-							break;
-						}
-
-						json_object_array_del_idx(addresses, random_idx, 1);
-					}
-
-					if (new_address)
-						remote_update_address(remote, new_address);
-
-					// maybe update hostname
-					const char *hostname;
-skip_address_update:
-					if (!gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
-						goto skip_name_update;
-
-					remote_update_name(remote, hostname);
+					remote_update_from_nodeinfo(remote, nodeinfo);
 				}
-skip_name_update:
 skip:
 				json_object_put(jobj);
 
