@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <dlfcn.h>
-#include <glob.h>
 #include <uci.h>
 #include <json-c/json.h>
 #include <assert.h>
@@ -10,20 +7,27 @@
 #include "util.h"
 #include "uclient.h"
 
-#define LIB_EXT "so"
-
 struct recv_ctx {
-	bool header_consumed;
-
 	bool debug;
-	bool nodes_found;
+
+	// json stream parsing
+	bool header_consumed;
 	struct json_tokener *tok;
 	bool tok_just_reset;
 
+	// uci stuff
 	struct uci_context *uci;
 	struct uci_package *uci_package;
 	bool uci_changed;
 	bool address_changed;
+};
+
+struct remote {
+	const char *name;
+	const char *address;
+	const char *nodeid;
+	struct uci_section* uci_section;
+	struct recv_ctx* ctx;
 };
 
 struct ustream_ssl_ctx *ssl_ctx;
@@ -53,14 +57,6 @@ void close_uci(struct recv_ctx *ctx) {
 
 	uci_free_context(ctx->uci);
 }
-
-struct remote {
-	const char *name;
-	const char *address;
-	const char *nodeid;
-	struct uci_section* uci_section;
-	struct recv_ctx* ctx;
-};
 
 struct remote *remote_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 	struct uci_element *e, *tmp;
@@ -121,12 +117,12 @@ void remote_update_from_nodeinfo(struct remote *r, json_object *nodeinfo) {
 	// maybe update address
 	struct json_object *addresses;
 	if (!gluon_json_get_path(nodeinfo, &addresses, json_type_array, 2, "network", "addresses"))
-		goto skip_address_update;
+		goto update_remote_name;
 
 	// only change the address, if the json says that the remote
 	// does not have the old address anymore.
 	if (r->address && gluon_json_string_array_contains(addresses, r->address))
-		goto skip_address_update;
+		goto update_remote_name;
 
 	while (json_object_array_length(addresses) > 0) {
 		int random_idx = rand() % json_object_array_length(addresses);
@@ -141,10 +137,10 @@ void remote_update_from_nodeinfo(struct remote *r, json_object *nodeinfo) {
 		json_object_array_del_idx(addresses, random_idx, 1);
 	}
 
-	// maybe update hostname
+	// maybe update name
 	const char *hostname;
 
-skip_address_update:
+update_remote_name:
 	if (gluon_json_get_path(nodeinfo, &hostname, json_type_string, 1, "hostname"))
 		remote_update_name(r, hostname);
 }
@@ -255,33 +251,6 @@ static void recv_cb(struct uclient *cl) {
 	}
 }
 
-static void init_ustream_ssl(void)
-{
-	void *dlh;
-
-	dlh = dlopen("libustream-ssl." LIB_EXT, RTLD_LAZY | RTLD_LOCAL);
-	if (!dlh)
-		return;
-
-	ssl_ops = dlsym(dlh, "ustream_ssl_ops");
-	if (!ssl_ops)
-		return;
-
-	ssl_ctx = ssl_ops->context_new(false);
-}
-
-static void init_ca_cert(void)
-{
-	glob_t gl;
-	unsigned int i;
-
-	glob("/etc/ssl/certs/*.crt", 0, NULL, &gl);
-	for (i = 0; i < gl.gl_pathc; i++)
-		ssl_ops->context_add_ca_crt_file(ssl_ctx, gl.gl_pathv[i]);
-	globfree(&gl);
-}
-
-
 int main(int argc, char const *argv[]) {
 	/* code */
 	struct recv_ctx test = {
@@ -293,23 +262,10 @@ int main(int argc, char const *argv[]) {
 	// init stuff
 	srand(time(NULL));
 	uloop_init();
-	init_ustream_ssl();
 	load_uci(&test);
+	init_get_url();
 
 	test.tok = json_tokener_new();
-
-	if (!ssl_ctx && !strncmp(url, "https", 5)) {
-		fprintf(stderr,
-			"%s: SSL support not available, please install one of the "
-			"libustream-.*[ssl|tls] packages as well as the ca-bundle and "
-			"ca-certificates packages.\n",
-			argv[0]);
-
-		return 1;
-	}
-
-	if (ssl_ctx)
-		init_ca_cert();
 
 	int err = get_url(url, &recv_cb, &test, -1);
 

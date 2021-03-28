@@ -52,3 +52,5 @@ ssize_t uclient_read_account(struct uclient *cl, char *buf, int len);
 
 int get_url(const char *url, void (*read_cb)(struct uclient *cl), void *cb_data, ssize_t len);
 const char *uclient_get_errmsg(int code);
+
+void init_get_url();
