@@ -101,7 +101,7 @@ void node_update_address(struct node *r, const char *new_address) {
 	if (!r->address || strcmp(r->address, new_address)) {
 		r->address = new_address;
 		_node_uci_set_field(r, "address", new_address);
-		printf("updating address of node %s to '%s'.\n", r->nodeid, new_address);
+		printf("Updating address of node %s to '%s'.\n", r->nodeid, new_address);
 		r->ctx->address_changed = true;
 	}
 }
@@ -110,7 +110,7 @@ void node_update_name(struct node *r, const char *new_name) {
 	if (!r->name || strcmp(r->name, new_name)) {
 		r->name = new_name;
 		_node_uci_set_field(r, "name", new_name);
-		printf("updating name of node %s to '%s'.\n", r->nodeid, new_name);
+		printf("Updating name of node %s to '%s'.\n", r->nodeid, new_name);
 	}
 }
 
@@ -188,7 +188,7 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 			return;
 
 		if (ctx->verbose)
-			printf("found node %s.\n", node->nodeid);
+			printf("Found node %s in stream.\n", node->nodeid);
 
 		node_update_from_nodeinfo(node, nodeinfo);
 	}
@@ -253,12 +253,13 @@ static void recv_cb(struct uclient *cl) {
 }
 
 void help(const char *prog) {
-	fprintf(stderr, "Usage: %s [-v] URL\n", prog);
+	fprintf(stderr, "Usage: %s [-v]\n", prog);
 	fprintf(stderr, "\n");
 	fprintf(stderr, "-h         display this help\n");
 	fprintf(stderr, "-v         verbose logging\n");
-	fprintf(stderr, "URL        http or https url of raw.jsonl nodes file\n");
 	fprintf(stderr, "\n");
+	fprintf(stderr, "This tool updates remote sections in the uci package gluon-controller\n");
+	fprintf(stderr, "based on the raw.jsonl file from the raw_jsonl_url specified in the package.\n");
 	exit(0);
 }
 
@@ -289,13 +290,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (optind >= argc) {
-		help(argv[0]);
-		exit(1);
-	}
-
-	const char *url = argv[optind];
-
 	// init stuff
 	srand(time(NULL));
 	load_uci(&ctx);
@@ -303,7 +297,20 @@ int main(int argc, char *argv[]) {
 
 	ctx.tok = json_tokener_new();
 
-	int err = get_url(url, &recv_cb, &ctx, -1);
+	struct uci_ptr url;
+	char *uci_path = strdup("gluon-controller.@controller[0].raw_jsonl_url");
+	if ((uci_lookup_ptr(ctx.uci, &url, uci_path, true) != UCI_OK) || !url.o) {
+		fprintf(stderr, "Error: uci option controller.@controller[0].raw_jsonl_url was not found.\n");
+		exit(1);
+	}
+
+	if (ctx.verbose)
+		fprintf(stderr, "Beginning to stream %s.\n", url.o->v.string);
+
+	int err = get_url(url.o->v.string, &recv_cb, &ctx, -1);
+
+	if (ctx.verbose)
+		fprintf(stderr, "Streaming finished.\n");
 
 	if (err != 0) {
 		printf("error: %s\n", uclient_get_errmsg(err));
@@ -312,9 +319,10 @@ int main(int argc, char *argv[]) {
 
 out:
 	close_uci(&ctx);
+	free(uci_path);
 
 	if (ctx.address_changed) {
-		printf("restarting gluon-controller service.\n");
+		printf("Restarting gluon-controller service.\n");
 		system("/etc/init.d/gluon-controller restart");
 	}
 
