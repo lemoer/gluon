@@ -72,14 +72,14 @@ struct node *node_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
 		if (!uci_nodeid || (strcmp(uci_nodeid, nodeid) != 0))
 			continue;
 
-		struct node *r = malloc(sizeof(struct node));
-		r->uci_section = s;
-		r->name = uci_lookup_option_string(ctx->uci, s, "name");
-		r->address = uci_lookup_option_string(ctx->uci, s, "address");
-		r->nodeid = nodeid;
-		r->ctx = ctx;
+		struct node *n = malloc(sizeof(struct node));
+		n->uci_section = s;
+		n->name = uci_lookup_option_string(ctx->uci, s, "name");
+		n->address = uci_lookup_option_string(ctx->uci, s, "address");
+		n->nodeid = nodeid;
+		n->ctx = ctx;
 
-		return r;
+		return n;
 	}
 
 	return NULL;
@@ -279,10 +279,10 @@ int main(int argc, char *argv[]) {
 				break;
 			case '?':
 				if (isprint (optopt))
-					fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+					fprintf (stderr, "Error: Unknown option `-%c'.\n", optopt);
 				else
 					fprintf (stderr,
-						"Unknown option character `\\x%x'.\n",
+						"Error: Unknown option character `\\x%x'.\n",
 						optopt);
 						return 1;
 			default:
@@ -313,16 +313,14 @@ int main(int argc, char *argv[]) {
 		fprintf(stderr, "Streaming finished.\n");
 
 	if (err != 0) {
-		printf("error: %s\n", uclient_get_errmsg(err));
-		goto out;
+		fprintf(stderr, "Error: %s\n", uclient_get_errmsg(err));
 	}
 
-out:
 	close_uci(&ctx);
 	free(uci_path);
 
 	if (ctx.address_changed) {
-		printf("Restarting gluon-controller service.\n");
+		fprintf(stderr, "Restarting gluon-controller service.\n");
 		system("/etc/init.d/gluon-controller restart");
 	}
 
