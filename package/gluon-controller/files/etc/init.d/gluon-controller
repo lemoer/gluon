@@ -37,6 +37,10 @@ start_instance() {
 }
 
 start_service () {
+	if ! test -f /etc/dropbear/id_rsa; then
+		dropbearkey -f /etc/dropbear/id_rsa -t rsa
+		dropbearkey -f /etc/dropbear/id_rsa -y | grep ssh-rsa > /etc/dropbear/id_rsa.pub
+	fi
 	config_load gluon-controller
 	config_foreach start_instance remote
 }
