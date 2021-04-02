@@ -1,0 +1,236 @@
+<%-
+	local ubus = require 'ubus'
+	local unistd = require 'posix.unistd'
+	local util = require 'gluon.util'
+	local uci = require('simple-uci').cursor()
+
+	local hostname = 'localhost'
+	local remotes = {}
+
+	local iframe_src = ''
+
+	uci:foreach('gluon-controller', 'remote', function(remote)
+		remotes[tonumber(remote.index)] = remote
+	end)
+
+	http:prepare_content("application/xhtml+xml")
+-%>
+
+<h1>Add New Node</h1>
+
+<div>
+	<a href="<%= url({'nodes', 'new'}) %>">Add node manually</a>, <a href="<%= url({'nodes'}) %>">Back...</a>
+</div>
+
+<div>
+	Search:
+	<input type="text" id="nodes-list-filter" name="nodes-filter" value="" oninput="filterChanged(event);"></input>
+	<ul id="nodes-list">
+		<li id="dots"></li>
+	</ul>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+	let url = 'https://harvester.ffh.zone/raw.jsonl';
+	let nodes = [];
+	let nodesFilterInputElem = document.getElementById("nodes-list-filter");
+	let loadingDotsElem = document.getElementById("dots");
+
+	let subscribed_nodeids = [
+<% for nodeid, remote in pairs(remotes) do %>
+		'<%| remote.nodeid %>',
+<% end %>
+	];
+
+	loading(loadingDotsElem);
+
+	function loading(elem) {
+		let dots = elem.dots;
+
+		if (!dots) {
+			dots = document.createTextNode("");
+			elem.appendChild(dots);
+			elem.dots = dots;
+
+			let interval = setInterval(() => loading(elem), 200);
+			elem.finished = function() {
+				clearInterval(interval);
+				if (elem.contains(dots))
+					elem.parentElement.removeChild(elem);
+			}
+		}
+
+		if (!elem.contains(dots)) {
+			// dots have been removed from parent, so we don't need to do
+			// anything anymore.
+			elem.finished();
+		}
+
+		if (dots.nodeValue == '...')
+			dots.nodeValue = '';
+
+		dots.nodeValue += ".";
+	}
+
+	class Node {
+		constructor(line) {
+			let nodeinfo = JSON.parse(line).nodeinfo;
+			this.name = nodeinfo.hostname;
+			let not_link_local = (addr) => !addr.match(/^fe[89ab][0-9a-f]:/);
+			let addresses = nodeinfo.network.addresses.filter(not_link_local);
+			this.address = addresses[Math.floor(Math.random() * addresses.length)];
+			this.nodeid = nodeinfo.node_id;
+			if (subscribed_nodeids.indexOf(this.nodeid) != -1)
+				this.state = 'subscribed';
+			else
+				this.state = 'new';
+		}
+
+		element() {
+			if (this.elem)
+				return this.elem;
+
+			this.elem = document.createElement("li");
+
+			this.refreshElement();
+
+			return this.elem;
+		}
+
+		refreshElement() {
+			// clean up all old children
+			while (this.elem.firstChild) {
+				this.elem.removeChild(this.elem.firstChild);
+			}
+
+			// hostname
+			var t = document.createTextNode(this.name + ' ');
+			this.elem.appendChild(t);
+
+			switch (this.state) {
+				case 'new':
+					var a = document.createElement('a');
+					a.onclick = () => this.addToThisController(a);
+					a.style.cursor = 'pointer';
+					var t = document.createTextNode("(add to this controller)");
+					a.appendChild(t);
+					this.elem.appendChild(a);
+					break;
+				case 'loading':
+					loading(this.elem);
+					break;
+				case 'subscribed':
+					this.elem.appendChild(document.createTextNode("(subscribed)"));
+					break;
+				case 'failed':
+					var span = document.createElement('span');
+					span.style.color = 'red';
+					span.appendChild(document.createTextNode("(failed)"));
+					this.elem.appendChild(span);
+					break;
+				default:
+					console.log('unknown state of ' + this.name);
+			}
+		}
+
+		filter(pattern) {
+			// Hide the node if pattern is not part of the name. Show
+			// otherwise.
+			let elem = this.element();
+			let N = (v) => v.toLowerCase(); // normalize
+
+			if (N(this.name).indexOf(N(pattern)) !== -1) {
+				elem.style.display = "list-item";
+			} else {
+				elem.style.display = "none";
+			}
+		}
+
+		addToThisController(a) {
+			let self = this;
+			self.state = 'loading';
+			self.refreshElement();
+
+			const formData  = new FormData();
+			const data = {
+				'id.1': 1,
+				'id.1.1.nodeid': this.nodeid,
+				'id.1.1.name': this.name,
+				'id.1.1.address': this.address
+			};
+
+			for(const name in data) {
+				formData.append(name, data[name]);
+			}
+
+			fetch('/cgi-bin/controller/nodes/new', {
+				method: 'POST',
+				body: formData,
+				redirect: 'error', // This is necessary, as 302/redirect to
+				                   // login page would be treated as success
+				                   // otherwise.
+			})
+				.then(function (response) {
+					if (!response.ok) {
+						throw Error(response.statusText);
+					}
+					return response.text();
+				})
+				.then(function (text) {
+					self.state = 'subscribed';
+					self.refreshElement();
+				}).catch(function () {
+					self.state = 'failed';
+					self.refreshElement();
+				});
+
+		}
+	}
+
+	fetch(url)
+		.then(response => response.text())
+		.then(function (text) {
+			// füge das neu erstellte Element und seinen Inhalt ins DOM ein
+			var nodesList = document.getElementById("nodes-list");
+
+			let lines = text.split('\n');
+			let fileinfo = JSON.parse(lines[0]);
+			if (!fileinfo.format) {
+				console.log('Unknown format.');
+				return;
+			}
+			if (fileinfo.format !== 'raw-nodes-jsonl') {
+				console.log('Unknown format ' + fileinfo.format + '.');
+				return;
+			}
+			if (fileinfo.version !== 1) {
+				console.log('Wrong format version ' + fileinfo.version + '.');
+				return;
+			}
+			for (var i = 1; i < lines.length; i++) {
+				let line = lines[i];
+				if (line === "")
+					continue;
+
+				nodes.push(new Node(line));
+			}
+			nodes.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase());
+
+			for (var node of nodes) {
+				nodesList.appendChild(node.element());
+			}
+
+			loadingDotsElem.finished();
+			// The browser might set a default value for the filter, if the user
+			// has visited this site earlier.
+			filterChanged();
+		});
+
+	function filterChanged() {
+		for (var node of nodes) {
+			node.filter(nodesFilterInputElem.value);
+		}
+	}
+//]]>
+</script>

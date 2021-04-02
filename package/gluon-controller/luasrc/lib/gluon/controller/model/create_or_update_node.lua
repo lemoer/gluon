@@ -31,6 +31,7 @@ local s = f:section(Section)
 
 local uci_section = nil
 local nodeid = s:option(Value, "nodeid", translate("Node-ID"))
+nodeid.datatype = 'minlength(12)'
 local name = s:option(Value, "name", translate("Name"))
 local address = s:option(Value, "address", translate("IPv6-Address"))
 address.datatype = 'ip6addr'

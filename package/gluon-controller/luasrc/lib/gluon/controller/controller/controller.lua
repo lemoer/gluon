@@ -321,3 +321,4 @@ req = request
 
 entry({"nodes"}, template("listnodes"), _("Network"), 40)
 entry({"nodes", "new"}, model("create_or_update_node"), _("Network"), 40)
+entry({"nodes", "new2"}, template("newnode2"), _("Network"), 40)
