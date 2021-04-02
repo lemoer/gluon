@@ -48,6 +48,7 @@ return function(config, http, renderer, name, pkg, scope)
 	})
 
 	local maps = load(filename, i18n, scope)
+	local bad_request = false
 
 	for _, map in ipairs(maps) do
 		map:parse(http)
@@ -55,6 +56,13 @@ return function(config, http, renderer, name, pkg, scope)
 	for _, map in ipairs(maps) do
 		map:handle()
 		hidenav = hidenav or map.hidenav
+		if map.state == classes.FORM_INVALID then
+			bad_request = true
+		end
+	end
+
+	if bad_request then
+		http:status(400, 'Bad Request');
 	end
 
 	renderer.render_layout('model/wrapper', {
