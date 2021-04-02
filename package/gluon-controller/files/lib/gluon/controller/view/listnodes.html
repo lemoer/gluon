@@ -18,23 +18,21 @@
 
 <h1>List of Nodes</h1>
 
-<a href="<%= url({'nodes', 'new2'}) %>">Add New Node</a>
+<div>
+	<a href="<%= url({'nodes', 'new2'}) %>">Add New Node</a>
+</div>
 
 <table>
 	<thead>
 		<tr>
 			<th>Name</th>
-			<th>Address</th>
-			<th>Node-ID</th>
 			<th>Actions</th>
 		</tr>
 	</thead>
 	<tbody>
 		<% for nodeid, remote in pairs(remotes) do %>
 		<tr>
-			<td><%| remote.name %></td>
-			<td><%| remote.address %></td>
-			<td><%| remote.nodeid %></td>
+			<td><a href="<%| url({'nodes', remote.nodeid}) %>"><%| remote.name %></a></td>
 			<td><a href="<%| url({'nodes', remote.nodeid, 'edit'}) %>">Edit</a>, <a href="#">Delete</a></td>
 		</tr>
 		<% end %>

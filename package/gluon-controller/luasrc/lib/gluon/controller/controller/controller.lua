@@ -14,8 +14,8 @@ function redirect(path)
 	end)
 end
 
-function iframe(iframe_src)
-	return template("iframe", { iframe_src = iframe_src })
+function iframe(iframe_src, remote)
+	return template("iframe", { iframe_src = iframe_src, remote = remote })
 end
 
 -- load remotes from uci
@@ -303,15 +303,15 @@ for index, remote in pairs(remotes) do
 	entry({"nodes", remote.nodeid},
 		redirect({"nodes", remote.nodeid, "status"}), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "status"},
-		iframe('http://['..remote.address..']/'), _("Information"), 1)
+		iframe('http://['..remote.address..']/', remote), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "config"},
-		iframe('/cgi-bin/controller/nodes/'..remote.nodeid..'/proxy/cgi-bin/config/wizard'), _("Information"), 1)
+		iframe('/cgi-bin/controller/nodes/'..remote.nodeid..'/proxy/cgi-bin/config/wizard', remote), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "map"},
-		iframe('https://hannover.freifunk.net/karte/#/en/map/'..remote.nodeid), _("Information"), 1)
+		iframe('https://hannover.freifunk.net/karte/#/en/map/'..remote.nodeid, remote), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "stats"},
-		iframe('https://stats.ffh.zone/d/000000021/router-fur-meshviewer?orgId=1&var-node='..remote.nodeid..'&from=now-12h&to=now-1m'), _("Information"), 1)
+		iframe('https://stats.ffh.zone/d/000000021/router-fur-meshviewer?orgId=1&var-node='..remote.nodeid..'&from=now-12h&to=now-1m', remote), _("Information"), 1)
 	entry({"nodes", remote.nodeid, "keepitup"},
-		iframe('https://keepitup.ffh.zone/node/'..remote.nodeid), _("Information"), 1)
+		iframe('https://keepitup.ffh.zone/node/'..remote.nodeid, remote), _("Information"), 1)
 
 	entry({"nodes", remote.nodeid, "edit"},
 		model("create_or_update_node", { remote=remote }), _("Information"), 1)

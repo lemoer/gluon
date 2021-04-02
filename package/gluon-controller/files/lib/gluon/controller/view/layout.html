@@ -38,6 +38,32 @@
 	local session = get_session()
 
 	http:prepare_content("application/xhtml+xml")
+
+	function build_link(link, name)
+		local link_is_active = true
+		if #link <= #request then
+			for i in pairs(link) do
+				if link[i] ~= request[i] then
+					link_is_active = false
+				end
+			end
+		else
+			link_is_active = false
+		end
+
+		local class
+		if link_is_active then
+			if #link == #request then
+				class = 'active'
+			else
+				class = 'active-light'
+			end
+		end
+		return '<a'
+			.. attr('href', url(link))
+			.. attr('class', class)
+			.. '>' .. name .. '</a>'
+	end
 -%>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
@@ -54,20 +80,25 @@
 			<% if session then -%>
 			<div class="sidebar">
 				<h1>Gluon-Controller</h1>
-				<div class="remotes">
-					<% for nodeid, remote in pairs(remotes) do %>
-					<div class="remote">
-					<h2><%| remote.name %></h2>
-						<a href="<%| url({'nodes', remote.nodeid, 'config'}) %>">Config Mode</a>,
-						<a href="<%| url({'nodes', remote.nodeid, 'status'}) %>">Status Page</a>,
-						<a href="<%| url({'nodes', remote.nodeid, 'map'}) %>">Map</a>,
-						<a href="<%| url({'nodes', remote.nodeid, 'stats'}) %>">Stats</a>,
-						<a href="<%| url({'nodes', remote.nodeid, 'keepitup'}) %>">KeepItUp</a>
-					</div>
-					<% end %>
-				</div>
-				<a class="manage-nodes" href="<%| url({'nodes'}) %>">Manage Nodes</a>
-				<a class="manage-nodes" href="<%| url({'logout'}) %>">Logout</a>
+				<ul class="nav">
+					<li><%= build_link({'nodes'}, 'Manage Nodes') %></li>
+					<% if scope and scope.remote then -%>
+					<li><ul>
+						<li>
+							<%= build_link({'nodes', scope.remote.nodeid}, scope.remote.name) %>
+							<ul class="nav">
+								<li><%= build_link({'nodes', scope.remote.nodeid, 'config'}, 'Config Mode') %></li>
+								<li><%= build_link({'nodes', scope.remote.nodeid, 'status'}, 'Status Page') %></li>
+								<li><%= build_link({'nodes', scope.remote.nodeid, 'map'}, 'Map') %></li>
+								<li><%= build_link({'nodes', scope.remote.nodeid, 'stats'}, 'Stats') %></li>
+								<li><%= build_link({'nodes', scope.remote.nodeid, 'keepitup'}, 'KeepItUp') %></li>
+							</ul>
+						</li>
+					</ul></li>
+					<%- end %>
+					<li><a class="manage-nodes" href="<%| url({'nodes'}) %>">Info</a></li>
+					<li><a class="manage-nodes" href="<%| url({'logout'}) %>">Logout</a></li>
+				</ul>
 			</div>
 			<%- end %>
 			<%- if (#request > 0) and (request[1] == 'login') then -%>
