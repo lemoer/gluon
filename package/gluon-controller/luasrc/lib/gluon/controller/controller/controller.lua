@@ -123,6 +123,7 @@ function proxy_request(host, port, request, prepend_path)
 		http:status(502)
 		http:prepare_content("text/html")
 		http:write("Connection to proxied host failed.")
+		os.exit(0)
 	end
 
 	function send_header(fd, header_name, value)
@@ -322,3 +323,4 @@ req = request
 entry({"nodes"}, template("listnodes"), _("Network"), 40)
 entry({"nodes", "new"}, model("create_or_update_node"), _("Network"), 40)
 entry({"nodes", "new2"}, template("newnode2"), _("Network"), 40)
+entry({"info"}, template("info"), _("Network"), 40)

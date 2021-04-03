@@ -1,0 +1,42 @@
+<%-
+	local unistd = require 'posix.unistd'
+
+	local f = io.input("/etc/dropbear/id_rsa.pub")
+	local pubkey = f:read("*all")
+	f:close()
+
+	http:prepare_content("application/xhtml+xml")
+-%>
+
+<h1>Information about the Gluon-Controller</h1>
+
+<h2>SSH-Pubkey</h2>
+
+<div id="pubkey" style="word-break: break-all; line-height: 1.5em; max-width: 500px;">
+	<%| pubkey %>
+</div>
+
+<a style="cursor: pointer; margin-top: -15px;" onclick="copyPubKey(this);">Copy to Clipboard</a>
+
+<script type="text/javascript">
+	function copyPubKey(elem) {
+		var pubkey = document.getElementById('pubkey').innerText;
+		copyStringToClipboard(pubkey);
+		var linkTextBefore = elem.innerText;
+		elem.innerText = 'Copied.'
+		setTimeout(function () {
+			elem.innerText = linkTextBefore;
+		}, 3000);
+	}
+
+	function copyStringToClipboard (str) {
+		var el = document.createElement('textarea');
+		el.value = str;
+		el.setAttribute('readonly', '');
+		el.style = {position: 'absolute', left: '-9999px'};
+		document.body.appendChild(el);
+		el.select();
+		document.execCommand('copy');
+		document.body.removeChild(el);
+	}
+</script>

@@ -96,8 +96,8 @@
 						</li>
 					</ul></li>
 					<%- end %>
-					<li><a class="manage-nodes" href="<%| url({'nodes'}) %>">Info</a></li>
-					<li><a class="manage-nodes" href="<%| url({'logout'}) %>">Logout</a></li>
+					<li><%= build_link({'info'}, 'Info') %></li>
+					<li><%= build_link({'logout'}, 'Logout') %></li>
 				</ul>
 			</div>
 			<%- end %>
