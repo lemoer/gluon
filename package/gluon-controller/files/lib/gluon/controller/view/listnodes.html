@@ -13,6 +13,12 @@
 		remotes[tonumber(remote.index)] = remote
 	end)
 
+	function sort_remotes(a, b)
+		return a.name < b.name
+	end
+
+	table.sort(remotes, sort_remotes)
+
 	http:prepare_content("application/xhtml+xml")
 -%>
 
