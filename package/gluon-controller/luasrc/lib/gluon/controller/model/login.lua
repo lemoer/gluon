@@ -34,7 +34,8 @@ function f:write()
 		return
 	end
 
-	http:header('Set-Cookie', 'ubus_rpc_session='..session.ubus_rpc_session..'; SameSite=lax')
+	-- SameSite=Lax prevents this cookie to be used for CRSF attacks for POST requests.
+	http:header('Set-Cookie', 'ubus_rpc_session='..session.ubus_rpc_session..'; SameSite=Lax')
 	http:redirect('/cgi-bin/controller/')
 end
 

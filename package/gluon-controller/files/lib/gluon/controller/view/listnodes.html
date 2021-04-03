@@ -10,7 +10,7 @@
 	local iframe_src = ''
 
 	uci:foreach('gluon-controller', 'remote', function(remote)
-		remotes[tonumber(remote.index)] = remote
+		remotes[#remotes+1] = remote
 	end)
 
 	function sort_remotes(a, b)
@@ -39,8 +39,40 @@
 		<% for nodeid, remote in pairs(remotes) do %>
 		<tr>
 			<td><a href="<%| url({'nodes', remote.nodeid}) %>"><%| remote.name %></a></td>
-			<td><a href="<%| url({'nodes', remote.nodeid, 'edit'}) %>">Edit</a>, <a href="#">Delete</a></td>
+			<td>
+				<a href="<%| url({'nodes', remote.nodeid, 'edit'}) %>">Edit</a>,
+				<a href="#" onclick="deleteNode(this, '<%| remote.nodeid %>')">Delete</a>
+			</td>
 		</tr>
 		<% end %>
 	</tbody>
 </table>
+<script type="text/javascript">
+	function deleteNode(elem, nodeid) {
+		var tr = elem.parentElement.parentElement;
+
+		fetch('/cgi-bin/controller/nodes/'+nodeid+'/delete', {
+			method: 'POST',
+			redirect: 'error', // This is necessary, as 302/redirect to
+			                   // login page would be treated as success
+			                   // otherwise.
+		})
+			.then(function (response) {
+				if (!response.ok) {
+					throw Error(response.statusText);
+				}
+				return response.text();
+			})
+			.then(function () {
+				tr.parentElement.deleteRow(tr);
+			})
+			.catch(function () {
+				var parent = elem.parentElement;
+				parent.removeChild(elem);
+				var span = document.createElement('span');
+				span.style.color = 'red';
+				span.appendChild(document.createTextNode("(failed)"));
+				parent.appendChild(span);
+			});
+	}
+</script>

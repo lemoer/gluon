@@ -71,7 +71,7 @@ entry({"login"}, model('login', { http=http }), _("Login"), 40)
 
 entry({"logout"}, call(function(http, renderer)
 	logout()
-	http:redirect('/cgi-bin/controller/test')
+	http:redirect('/cgi-bin/controller/login')
 	http:close()
 end))
 
@@ -190,7 +190,7 @@ function proxy_request(host, port, request, prepend_path)
 			remaining_chunk = "",
 			new_data = function()
 				local data, err = sys_sock.recv(fd, 1024)
-				if data == "" then
+				if not data or data == "" then
 					os.exit(0)
 				end
 
@@ -316,6 +316,24 @@ for index, remote in pairs(remotes) do
 
 	entry({"nodes", remote.nodeid, "edit"},
 		model("create_or_update_node", { remote=remote }), _("Information"), 1)
+	entry({"nodes", remote.nodeid, "delete"}, call(function(http, renderer)
+		local request_method = http:getenv('REQUEST_METHOD')
+		if request_method ~= 'POST' then
+			-- This is essential for csrf protection, see SameSite=Lax.
+			http:status(400, 'Bad Request')
+			http:prepare_content("text/html")
+			http:write('Only POST is allowed.')
+			os.exit(0)
+		end
+
+		uci:delete('gluon-controller', remote['.name'])
+		uci:commit('gluon-controller')
+
+		http:status(200, 'Ok')
+		http:prepare_content("text/html")
+		http:write('Deleted, ok.')
+		os.exit(0)
+	end))
 end
 
 req = request
