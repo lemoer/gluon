@@ -9,7 +9,38 @@
 
 	local iframe_src = ''
 
+	function get_tcp4_listen_ports()
+		-- returns a table with { [80] = true, [37001] = true, ... }
+		local path = '/proc/net/tcp'
+		local is_listen_port = {}
+		local STATE_LISTEN = 0xa
+
+		for line in io.lines(path) do
+			local src_port, state = line:match('^%s+%d+:%s+%x+:(%x+)%s+%x+:%x+%s(%x+)')
+
+			if src_port then
+				src_port = tonumber(src_port, 16)
+				state = tonumber(state, 16)
+
+				if state == STATE_LISTEN then
+					is_listen_port[src_port] = true
+				end
+			end
+		end
+
+		return is_listen_port
+	end
+
+	local is_listen_port = get_tcp4_listen_ports()
+
 	uci:foreach('gluon-controller', 'remote', function(remote)
+		-- Unfortunately autossh does not provide an interface to query whether
+		-- a certain ssh connection is established, so we have to do some quirks
+		-- here. As we are using ssh port forwarding, we can exploit the fact if
+		-- a certain port on the gluon-controller is bound. If the connection to
+		-- the remote is established, the controller will listen on
+		-- 127.0.0.1:370XX due to the port forwarding.
+		remote.is_connected = is_listen_port[37000+tonumber(remote.index)]
 		remotes[#remotes+1] = remote
 	end)
 
@@ -32,6 +63,7 @@
 	<thead>
 		<tr>
 			<th>Name</th>
+			<th>State</th>
 			<th>Actions</th>
 		</tr>
 	</thead>
@@ -39,6 +71,13 @@
 		<% for nodeid, remote in pairs(remotes) do %>
 		<tr>
 			<td><a href="<%| url({'nodes', remote.nodeid}) %>"><%| remote.name %></a></td>
+			<td>
+				<% if remote.is_connected then %>
+					connected
+				<% else %>
+					not connected
+				<% end %>
+			</td>
 			<td>
 				<a href="<%| url({'nodes', remote.nodeid, 'edit'}) %>">Edit</a>,
 				<a href="#" onclick="deleteNode(this, '<%| remote.nodeid %>')">Delete</a>
