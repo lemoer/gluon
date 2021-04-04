@@ -1,5 +1,6 @@
 <%-
 	local ubus = require 'ubus'
+	json = require 'jsonc'
 	local unistd = require 'posix.unistd'
 	local util = require 'gluon.util'
 	local uci = require('simple-uci').cursor()
@@ -31,6 +32,36 @@
 		return is_listen_port
 	end
 
+	function node_read_online_status(remote)
+		local data = json.load('/tmp/gluon-controller/node-data/'..remote.nodeid..'.json')
+
+		if not data then
+			return nil
+		end
+
+		if parse_json_date(data.updated_at) + 300 < os.time(os.date("!*t")) then
+			-- data is older than 5 minutes, so we consider it outdated.
+			return nil
+		end
+
+		return data.online
+	end
+
+	function parse_json_date(json_date)
+		local pattern = "(%d+)%-(%d+)%-(%d+)%a(%d+)%:(%d+)%:([%d%.]+)([Z%+%-])(%d?%d?)%:?(%d?%d?)"
+		local year, month, day, hour, minute,
+			seconds, offsetsign, offsethour, offsetmin = json_date:match(pattern)
+		local timestamp = os.time{year = year, month = month,
+		day = day, hour = hour, min = minute, sec = seconds}
+		local offset = 0
+		if offsetsign ~= 'Z' then
+			offset = tonumber(offsethour) * 60 + tonumber(offsetmin)
+			if xoffset == "-" then offset = offset * -1 end
+		end
+
+		return timestamp + offset
+	end
+
 	local is_listen_port = get_tcp4_listen_ports()
 
 	uci:foreach('gluon-controller', 'remote', function(remote)
@@ -41,6 +72,20 @@
 		-- the remote is established, the controller will listen on
 		-- 127.0.0.1:370XX due to the port forwarding.
 		remote.is_connected = is_listen_port[37000+tonumber(remote.index)]
+		remote.is_online = node_read_online_status(remote)
+
+		if remote.is_connected then
+			remote.state = 'connected'
+		else
+			if remote.is_online then
+				remote.state = 'not connected'
+			elseif remote.is_online == false then
+				remote.state = 'offline'
+			elseif remote.is_online == nil then
+				remote.state = 'unknown'
+			end
+		end
+
 		remotes[#remotes+1] = remote
 	end)
 
@@ -71,13 +116,7 @@
 		<% for nodeid, remote in pairs(remotes) do %>
 		<tr>
 			<td><a href="<%| url({'nodes', remote.nodeid}) %>"><%| remote.name %></a></td>
-			<td>
-				<% if remote.is_connected then %>
-					connected
-				<% else %>
-					not connected
-				<% end %>
-			</td>
+			<td><%| remote.state %></td>
 			<td>
 				<a href="<%| url({'nodes', remote.nodeid, 'edit'}) %>">Edit</a>,
 				<a href="#" onclick="deleteNode(this, '<%| remote.nodeid %>')">Delete</a>

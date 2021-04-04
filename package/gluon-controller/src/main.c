@@ -15,6 +15,7 @@ struct recv_ctx {
 	bool header_consumed;
 	struct json_tokener *tok;
 	bool tok_just_reset;
+	const char *updated_at;
 
 	// uci stuff
 	struct uci_context *uci;
@@ -57,6 +58,13 @@ void close_uci(struct recv_ctx *ctx) {
 	}
 
 	uci_free_context(ctx->uci);
+}
+
+void ensure_dir(const char *path) {
+	if ((mkdir(path, 755) == -1) && (errno != EEXIST)) {
+			fprintf(stderr, "Error: directory %s could not be created.", path);
+			exit(1);
+	}
 }
 
 struct node *node_find_by_nodeid(struct recv_ctx *ctx, const char *nodeid) {
@@ -114,6 +122,14 @@ void node_update_name(struct node *n, const char *new_name) {
 	}
 }
 
+void node_store_data(struct node *n, json_object *nodeinfo) {
+	const char path[128];
+	snprintf(path, 128, "/tmp/gluon-controller/node-data/%s.json", n->nodeid);
+	if (json_object_to_file(path, nodeinfo) == -1) {
+		fprintf(stderr, "Warning: Could not write %s.", path);
+	}
+}
+
 void node_update_from_nodeinfo(struct node *n, json_object *nodeinfo) {
 	// maybe update address
 	struct json_object *addresses;
@@ -149,6 +165,7 @@ update_node_name:
 void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 	if (!ctx->header_consumed) {
 		const char *format;
+		const char *updated_at;
 		int version;
 
 		if (!gluon_json_get_path(line, &format, json_type_string, 1, "format")) {
@@ -171,6 +188,12 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 			exit(1);
 		}
 
+		if (!gluon_json_get_path(line, &updated_at, json_type_string, 1, "updated_at")) {
+			fprintf(stderr, "Error: unexpectedly couldn't find updated_at field in header.\n");
+			exit(1);
+		}
+
+		ctx->updated_at = strdup(updated_at);
 		ctx->header_consumed = true;
 	} else {
 		struct json_object *nodeinfo = json_object_object_get(line, "nodeinfo");
@@ -191,6 +214,10 @@ void consume_line_json(struct recv_ctx *ctx, struct json_object *line) {
 			printf("Found node %s in stream.\n", node->nodeid);
 
 		node_update_from_nodeinfo(node, nodeinfo);
+
+		// store nodeinfo
+		json_object_object_add(line, "updated_at", json_object_new_string(ctx->updated_at));
+		node_store_data(node, line);
 	}
 }
 
@@ -297,10 +324,13 @@ int main(int argc, char *argv[]) {
 
 	ctx.tok = json_tokener_new();
 
+	ensure_dir("/tmp/gluon-controller/");
+	ensure_dir("/tmp/gluon-controller/node-data/");
+
 	struct uci_ptr url;
 	char *uci_path = strdup("gluon-controller.@controller[0].raw_jsonl_url");
 	if ((uci_lookup_ptr(ctx.uci, &url, uci_path, true) != UCI_OK) || !url.o) {
-		fprintf(stderr, "Error: uci option controller.@controller[0].raw_jsonl_url was not found.\n");
+		fprintf(stderr, "Error: uci option gluon-controller.@controller[0].raw_jsonl_url was not found.\n");
 		exit(1);
 	}
 
