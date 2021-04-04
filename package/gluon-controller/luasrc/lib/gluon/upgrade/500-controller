@@ -1,6 +1,10 @@
 #!/usr/bin/lua
 
 local uci = require('simple-uci').cursor()
+local site = require 'gluon.site'
+
+local cfg = uci:get_first("gluon-controller", "controller") or uci:add("gluon-controller", "controller")
+uci:set('gluon-controller', cfg, 'raw_jsonl_url', site.controller.raw_jsonl_url())
 
 
 local function get_mem_total()
@@ -33,5 +37,5 @@ uci:section('uhttpd', 'uhttpd', 'controller', {
 	tcp_keepalive = true,
 })
 uci:save('uhttpd')
-
+uci:save('gluon-controller')
 uci:save('firewall')
