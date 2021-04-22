@@ -40,3 +40,6 @@ msgstr "E-Mail"
 
 msgid "Domains"
 msgstr "Domains"
+
+msgid "Save & apply"
+msgstr "Speichern & Anwenden"

@@ -18,6 +18,10 @@ local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
 
 local f = Form(translate("SSL Certificate"))
 
+if not util.in_setup_mode() then
+	f.submit = translate('Save & apply')
+end
+
 local acme = uci:get_first('acme', 'acme')
 
 s = f:section(Section, nil, translate(
@@ -52,6 +56,10 @@ function f:write()
 	end
 
 	uci:commit("acme")
+
+	if not util.in_setup_mode() then
+		util.reconfigure_asynchronously()
+	end
 end
 
 return f

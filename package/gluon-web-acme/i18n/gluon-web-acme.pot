@@ -22,3 +22,6 @@ msgstr ""
 
 msgid "Domains"
 msgstr ""
+
+msgid "Save & apply"
+msgstr ""
