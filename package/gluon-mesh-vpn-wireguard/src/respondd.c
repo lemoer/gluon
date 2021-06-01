@@ -133,7 +133,6 @@ end:
 
 static bool wgpeerselector_enabled(void) {
 	bool enabled = true;
-	struct json_object *ret = json_object_new_object();
 
 	struct uci_context *ctx = uci_alloc_context();
 	if (!ctx)
