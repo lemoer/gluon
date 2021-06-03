@@ -1,37 +1,19 @@
 #!/usr/bin/lua
 
 local uci = require('simple-uci').cursor()
-local util = require 'gluon.util'
 local site = require 'gluon.site'
-local hash = require 'hash'
 local vpn_core = require 'gluon.mesh-vpn'
-
-local function calc_address (public_key)
-  local s = hash.md5(public_key)
-  return 'fe80::02'..s:sub(1,2)..':'..s:sub(3,4)..'ff:fe'..s:sub(5,6)..':'..s:sub(7,10)
-end
 
 local private_key = uci:get("network", vpn_core.get_interface(), "private_key")
 
 if not private_key or not private_key:match("^" .. ("[%a%d+/]"):rep(43) .. "=$") then
-  -- generate one
-  private_key = util.trim(util.exec("/usr/bin/wg genkey"))
+  private_key = "generate"
 end
-
-local public_key = util.trim(util.exec("echo '" .. private_key .. "' | /usr/bin/wg pubkey"))
 
 uci:section('network', 'interface', vpn_core.get_interface(), {
   proto = 'wireguard',
   fwmark = 1,
   private_key = private_key,
-  addresses = { calc_address(public_key) }
-})
-
-uci:section('network', 'interface', 'vpn_peerselector', {
-  proto = 'wgpeerselector',
-  transitive = true,
-  ifname = '@'..vpn_core.get_interface(),
-  unix_group = 'gluon-mesh-vpn',
 })
 
 -- Clean up previous configuration

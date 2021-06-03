@@ -7,9 +7,7 @@ local vpn_core = require 'gluon.mesh-vpn'
 local M = {}
 
 function M.public_key()
-	local iface = vpn_core.get_interface()
-	return util.trim(util.exec(
-		"uci get network."..iface..".private_key | /usr/bin/wg pubkey"))
+	return util.trim(util.exec("/lib/gluon/mesh-vpn/wireguard_pubkey.sh"))
 end
 
 function M.enable(val)
