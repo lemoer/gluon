@@ -1,0 +1,53 @@
+#!/usr/bin/lua
+
+local uci = require('simple-uci').cursor()
+local util = require 'gluon.util'
+local site = require 'gluon.site'
+local hash = require 'hash'
+
+local function calc_address (public_key)
+  local s = hash.md5(public_key)
+  return 'fe80::02'..s:sub(1,2)..':'..s:sub(3,4)..'ff:fe'..s:sub(5,6)..':'..s:sub(7,10)
+end
+
+local private_key = uci:get("network", "vpn", "private_key")
+
+if not private_key or not private_key:match("^" .. ("[%a%d+/]"):rep(43) .. "=$") then
+  -- generate one
+  private_key = util.trim(util.exec("/usr/bin/wg genkey"))
+end
+
+local public_key = util.trim(util.exec("echo '" .. private_key .. "' | /usr/bin/wg pubkey"))
+
+uci:section('network', 'interface', 'vpn', {
+  proto = 'wireguard',
+  fwmark = 1,
+  disabled = true, -- this is actually handled by 500-mesh-vpn in gluon-mesh-vpn-core
+  private_key = private_key,
+  addresses = { calc_address(public_key) }
+})
+
+uci:section('network', 'interface', 'vpn_peerselector', {
+  proto = 'wgpeerselector',
+  transitive = true,
+  ifname = '@vpn',
+  unix_group = 'gluon-mesh-vpn',
+})
+
+-- Clean up previous configuration
+uci:delete_all('wgpeerselector', 'peer', function(peer)
+  return peer.preserve ~= '1'
+end)
+
+for name, peer in pairs(site.mesh_vpn.wireguard.peers()) do
+  uci:section("wgpeerselector", "peer", name, {
+    enabled = true,
+    endpoint = peer.endpoint,
+    public_key = peer.public_key,
+    allowed_ips = { "fe80::1/128" },
+    ifname = 'vpn',
+  })
+end
+
+uci:save("wgpeerselector")
+uci:save("network")
