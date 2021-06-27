@@ -13,7 +13,7 @@ function M.enable(val)
 end
 
 function M.get_interface()
-	return 'mesh-vpn'
+	return 'vpn'
 end
 
 function M.get_provider(name)
