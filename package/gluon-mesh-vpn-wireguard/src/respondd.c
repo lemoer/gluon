@@ -92,15 +92,7 @@ static struct json_object * get_wireguard_version(void) {
 }
 
 static bool wireguard_enabled(void) {
-	FILE *fd = popen("grep '^wireguard ' /proc/modules", "r");
-	if (!fd)
-		return false;
-	char buf[4];
-	size_t readable=0;
-	readable = fread(buf, 1, sizeof(buf), fd);
-	pclose(fd);
-
-	return (readable > 0);
+	return access("/sys/module/wireguard", F_OK) == 0;
 }
 
 static bool get_pubkey_privacy(void) {
