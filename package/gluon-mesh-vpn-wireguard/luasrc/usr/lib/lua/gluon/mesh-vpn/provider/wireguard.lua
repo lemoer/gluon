@@ -15,6 +15,10 @@ function M.enable(val)
 	uci:save('network')
 end
 
+function M.proto()
+	return 'gluon_wireguard'
+end
+
 function M.active()
 	return site.mesh_vpn.wireguard() ~= nil
 end

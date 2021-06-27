@@ -7,13 +7,15 @@ local util = require 'gluon.util'
 local uci = require('simple-uci').cursor()
 
 local vpn_core = require 'gluon.mesh-vpn'
+local vpn, active_vpn = vpn_core.get_active_provider()
 
 uci:section('network', 'interface', 'mesh_vpn', {
 	ifname = vpn_core.get_interface(),
-	proto = 'gluon_mesh',
+	proto = active_vpn.proto(),
 	transitive = true,
 	fixed_mtu = true,
-	macaddr = util.generate_mac(7),
+	macaddr = util.generate_mac(7), -- needed for proto gluon_mesh
+	index = 7,                      -- needed for proto gluon_wireguard
 	mtu = site.mesh_vpn.mtu(),
 })
 
@@ -35,7 +37,6 @@ uci:save('firewall')
 
 -- VPN migration
 if not uci:get('gluon', 'mesh_vpn') then
-	local vpn, _ = vpn_core.get_active_provider()
 
 	local fastd_enabled = uci:get('fastd', 'mesh_vpn', 'enabled')
 	local tunneldigger_enabled = uci:get('tunneldigger', 'mesh_vpn', 'enabled')

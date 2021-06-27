@@ -14,6 +14,10 @@ function M.enable(val)
 	uci:save('tunneldigger')
 end
 
+function M.proto()
+	return 'gluon_mesh'
+end
+
 function M.active()
 	return site.mesh_vpn.tunneldigger() ~= nil
 end
