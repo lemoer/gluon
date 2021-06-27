@@ -83,10 +83,6 @@ static struct json_object * stdout_read(const char *cmd, const char *skip, bool 
 	return ret;
 }
 
-static struct json_object * get_wgpeerselector_version(void) {
-	return stdout_read("exec wgpeerselector --version", "wgpeerselector ", true);
-}
-
 static struct json_object * get_wireguard_public_key(void) {
 	return stdout_read("exec /lib/gluon/mesh-vpn/wireguard_pubkey.sh", "", false);
 }
@@ -162,7 +158,6 @@ static struct json_object * get_wgpeerselector(void) {
 	bool enabled = wgpeerselector_enabled();
 
 	struct json_object *ret = json_object_new_object();
-	json_object_object_add(ret, "version", get_wgpeerselector_version());
 	json_object_object_add(ret, "enabled", json_object_new_boolean(enabled));
 	return ret;
 }
