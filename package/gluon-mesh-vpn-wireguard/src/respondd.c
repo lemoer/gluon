@@ -51,20 +51,17 @@ static struct json_object * stdout_read(const char *cmd, const char *skip, bool 
 	size_t len = 0;
 	size_t skiplen = strlen(skip);
 
-	ssize_t r = getline(&line, &len, f);
+	ssize_t read_chars = getline(&line, &len, f);
 
 	pclose(f);
 
-	if (r >= 0) {
-		len = strlen(line); /* The len given by getline is the buffer size, not the string length */
-
-		if (len && line[len-1] == '\n')
-			line[len-1] = 0;
-	}
-	else {
+	if (read_chars < 1) {
 		free(line);
-		line = NULL;
+		return NULL;
 	}
+
+	if (line[read_chars-1] == '\n')
+		line[read_chars-1] = '\0';
 
 	const char *content = line;
 	if (strncmp(content, skip, skiplen) == 0)
