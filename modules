@@ -12,5 +12,6 @@ PACKAGES_ROUTING_REPO=https://github.com/openwrt-routing/packages.git
 PACKAGES_ROUTING_BRANCH=openwrt-21.02
 PACKAGES_ROUTING_COMMIT=2baff33918c089fd3744c7192f8ae7a29c47a8d7
 
-PACKAGES_GLUON_REPO=https://github.com/freifunk-gluon/packages.git
-PACKAGES_GLUON_COMMIT=b644a2a8d8bf2543d12f782f59a2b2ecdc7bda97
+PACKAGES_GLUON_REPO=https://github.com/lemoer/packages.git
+PACKAGES_GLUON_BRANCH=pr_wireguard_vpn
+PACKAGES_GLUON_COMMIT=bad830ed9bf70d89d64e72e5db5285bd245fa2fb
