@@ -14,7 +14,7 @@ end
 
 function M.get_interface()
 	-- Be aware, that '-' signs are not allowed, since wireguard stores this
-	-- iface name in a uci section name and uci section names do not allow '-'.  
+	-- iface name in a uci section name and uci section names do not allow '-'.
 	return 'vpn'
 end
 
