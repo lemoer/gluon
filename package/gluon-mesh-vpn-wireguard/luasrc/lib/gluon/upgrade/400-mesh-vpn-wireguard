@@ -6,7 +6,7 @@ local vpn_core = require 'gluon.mesh-vpn'
 
 local private_key = uci:get("network", vpn_core.get_interface(), "private_key")
 
-if not private_key or not private_key:match("^" .. ("[%a%d+/]"):rep(42) .. "[A|E|I|M|Q|U|Y|c|g|k|o|s|w|4|8|0]=$") then
+if not private_key or not private_key:match("^" .. ("[%a%d+/]"):rep(42) .. "[AEIMQUYcgkosw480]=$") then
   private_key = "generate"
 end
 
