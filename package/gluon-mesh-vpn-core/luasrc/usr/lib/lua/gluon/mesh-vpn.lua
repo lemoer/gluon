@@ -13,9 +13,7 @@ function M.enable(val)
 end
 
 function M.get_interface()
-	-- Be aware, that '-' signs are not allowed, since wireguard stores this
-	-- iface name in a uci section name and uci section names do not allow '-'.
-	return 'vpn'
+	return 'mesh-vpn'
 end
 
 function M.get_provider(name)

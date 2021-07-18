@@ -15,10 +15,6 @@ function M.enable(val)
 	uci:save('fastd')
 end
 
-function M.proto()
-	return 'gluon_mesh'
-end
-
 function M.active()
 	return site.mesh_vpn.fastd() ~= nil
 end

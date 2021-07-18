@@ -11,12 +11,8 @@ function M.public_key()
 end
 
 function M.enable(val)
-	uci:set('network', 'vpn', 'disabled', not val)
+	uci:set('network', 'wg_mesh', 'disabled', not val)
 	uci:save('network')
-end
-
-function M.proto()
-	return 'gluon_wireguard'
 end
 
 function M.active()

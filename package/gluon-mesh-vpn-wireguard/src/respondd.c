@@ -128,7 +128,7 @@ static bool wgpeerselector_enabled(void) {
 	if (uci_load(ctx, "network", &p))
 		goto disabled;
 
-	struct uci_section *s = uci_lookup_section(ctx, p, "vpn");
+	struct uci_section *s = uci_lookup_section(ctx, p, "wg_mesh");
 	if (!s)
 		goto disabled;
 
@@ -225,7 +225,7 @@ static struct json_object * respondd_provider_statistics(void) {
 		goto err;
 	}
 
-	if (ubus_lookup_id(ctx, "wgpeerselector.vpn", &ubus_path_id)) {
+	if (ubus_lookup_id(ctx, "wgpeerselector.wg_mesh", &ubus_path_id)) {
 		goto err;
 	}
 
