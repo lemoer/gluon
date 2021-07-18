@@ -1,0 +1,7 @@
+#!/bin/sh
+
+# rename vpn interface to wg_mesh
+if uci -q get network.vpn > /dev/null; then
+	uci rename network.vpn=wg_mesh
+	uci commit network
+fi
