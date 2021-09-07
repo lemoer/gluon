@@ -21,32 +21,50 @@ async function loadToObject(obj, url, method) {
 	}
 }
 
+function getSchemaByPath(t, propertyPath) {
+	let schema = t.options.schema;
+	for (let key of propertyPath.split('.')) {
+		if (schema && schema.properties && key in schema.properties) {
+			schema = schema.properties[key];
+		} else {
+			return false;
+		}
+	}
+	return schema;
+}
+
 function propertyExistsInSchema(propertyPath) {
 	return function () {
-		let schema = this.options.schema;
-		for (let key of propertyPath.split('.')) {
-			if (schema && schema.properties && key in schema.properties) {
-				schema = schema.properties[key];
-			} else {
-				return false;
-			}
-		}
-		return true;
+		return getSchemaByPath(this, propertyPath);
 	}
 };
-
 
 Vue.component('gl-option', {
 	data () {
 		return {
-			content: this.value
+			content: this.value,
+			options: options
 		}
 	},
 	model: 'value',
-	props: ['name', 'value', 'description', 'type'],
+	props: ['name', 'value', 'description', 'type', 'path'],
 	computed: {
 		id: function () {
 			return this.name.toLowerCase().replace(/ /g, '');
+		},
+		enums: function () {
+			if (!this.path)
+				return [];
+
+			let schema = getSchemaByPath(this, this.path);
+			let enums = [];
+			for (var i = 0; i < schema.enum.length; i++) {
+				enums.push({
+					value: schema.enum[i],
+					title: schema.enum_titles[i]
+				})
+			}
+			return enums;
 		}
 	},
 	template: `
@@ -55,6 +73,10 @@ Vue.component('gl-option', {
 			<div class="gluon-value-field">
 				<input v-if="type === 'number'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
 				<input v-if="type === 'text'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
+				<select v-if="type === 'dropdown'" v-model="content" @change="onInput">
+					<option value=""></option>
+					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
+				</select>
 				<template v-if="type === 'boolean'">
 					<input class="gluon-input-checkbox" type="checkbox" value="1" :id="id" v-model="content" @input="onInput">
 					<label :for="id"></label>
@@ -128,7 +150,7 @@ Vue.component('domain', {
 	},
 	template: `
 	<div v-if="hasDomain" class="gluon-section-node">
-		<gl-option name="Domain" v-model="config.wizard.domain" type="text" />
+		<gl-option name="Domain" v-model="config.wizard.domain" type="dropdown" path="wizard.domain" />
 	</div>
 	`,
 });
