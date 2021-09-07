@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet" href="style/gluon.css">
+		<script src="js/gluon-web-model.js" charset="utf-8"></script>
+		<script src="js/gluon-web-osm.js" charset="utf-8"></script>
+		<script src="js/vue.js" charset="utf-8"></script>
+
+	</head>
+	<body>
+
+	<div id="menubar">
+		<div class="hostinfo">
+			<a href="/cgi-bin/config/">
+				lemoer-acmetest2 / exp-20210906
+			</a>
+		</div>
+
+		<ul id="topmenu">
+			<li><a class="topcat active" href="/cgi-bin/config/wizard">Wizard</a></li>
+			<li><a class="topcat" href="/cgi-bin/config/admin">Erweiterte Einstellungen</a></li>
+		</ul>
+	</div>
+
+	<div id="maincontainer">
+		<div id="maincontent">
+			<noscript>
+				<div class="errorbox">
+					<strong>JavaScript benötigt!</strong><br />
+					Bitte aktiviere JavaScript in deinem Browser, damit das Webinterface korrekt funktionieren kann.
+				</div>
+			</noscript>
+
+			<form method="post" enctype="multipart/form-data" action="/cgi-bin/config/wizard" data-update="reset">
+	<input type="hidden" name="token" value="" />
+	<input type="hidden" name="id.1" value="1" />
+
+	<div class="gluon-form" id="form-id.1">
+
+
+
+<h2 name="content">Willkommen!</h2>
+
+<p>
+	Willkommen zum Einrichtungsassistenten für deinen neuen Hannoveraner Freifunk-Knoten. Fülle das folgende Formular deinen Vorstellungen entsprechend aus und sende es ab.
+</p>
+
+<fieldset class="gluon-section">
+
+	<div class="gluon-section-descr">
+		Dieser Knoten aktualisiert seine Firmware automatisch, sobald eine neue Version vorliegt.
+	</div>
+	<div class="gluon-section-node">
+		<div id="section-id.1.2">
+
+		</div>
+	</div>
+</fieldset>
+
+<fieldset class="gluon-section">
+	<div class="gluon-section-descr">
+		Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+	</div>
+	<div id="test">
+
+	</div>
+</fieldset>
+
+<fieldset class="gluon-section">
+	<div class="gluon-section-descr">
+		Der Knotenname dient ausschließlich zur Identifikation deines Knotens, z.B. auf einer Knotenkarte. Er hat keinen Einfluss auf den Namen (SSID) des ausgestrahlten WLANs.
+	</div>
+	<div class="gluon-section-node">
+		<div id="section-id.1.3">
+
+		</div>
+	</div>
+</fieldset>
+<fieldset class="gluon-section">
+	<div class="gluon-section-node">
+		<div id="section-id.1.4">
+			<div class="gluon-value" id="value-id.1.4.hostname" data-index="1">
+				<label class="gluon-value-title" for="id.1.4.hostname">Name dieses Knotens</label>
+				<div class="gluon-value-field">
+					<input data-update="change" id="id.1.4.hostname" name="id.1.4.hostname" type="text" class="gluon-input-text" value="lemoer-acmetest2" placeholder="platzhalter-525400123457" data-type="minlength(1)" data-optional="true" />
+				</div>
+			</div>
+		</div>
+
+	</div>
+</fieldset>
+<fieldset class="gluon-section">
+	<div class="gluon-section-descr">
+		Hier musst du deine Standortzugehörigkeit festlegen. Wähle deine Stadt und gegebenenfalls den Stadtteil aus. Passt keine andere Option, wähle die Domäne "Umland" aus. Die Standortzugehörigkeit legt fest, mit welchen Freifunk Knoten sich dein Knoten verbinden kann (Mesh-Netz).
+	</div>
+	<div class="gluon-section-node">
+		<div id="section-id.1.5">
+			<div class="gluon-value" id="value-id.1.5.domain" data-index="1">
+				<label class="gluon-value-title" for="id.1.5.domain">Domäne</label>
+			<div class="gluon-value-field">
+
+
+	<select class="gluon-input-select" data-update="change" id="id.1.5.domain" name="id.1.5.domain" size="1" data-type="minlength(1)">
+		<option id="id.1.5.domain." value="" data-index="1"></option><option id="id.1.5.domain.alfeld" value="alfeld" data-index="2">Alfeld</option><option id="id.1.5.domain.barsinghausen" value="barsinghausen" data-index="3">Barsinghausen</option><option id="id.1.5.domain.burgdorf" value="burgdorf" data-index="4">Burgdorf</option><option id="id.1.5.domain.burgwedel" value="burgwedel" data-index="5">Burgwedel</option><option id="id.1.5.domain.garbsen" value="garbsen" data-index="6">Garbsen</option><option id="id.1.5.domain.gehrden" value="gehrden" data-index="7">Gehrden</option><option id="id.1.5.domain.hameln" value="hameln" data-index="8">Hameln</option><option id="id.1.5.domain.ahlem" value="ahlem" data-index="9">Hannover: Ahlem</option><option id="id.1.5.domain.anderten" value="anderten" data-index="10">Hannover: Anderten</option><option id="id.1.5.domain.badenstedt" value="badenstedt" data-index="11">Hannover: Badenstedt</option><option id="id.1.5.domain.bemerode" value="bemerode" data-index="12">Hannover: Bemerode</option><option id="id.1.5.domain.bornum" value="bornum" data-index="13">Hannover: Bornum</option><option id="id.1.5.domain.bothfeld" value="bothfeld" data-index="14">Hannover: Bothfeld</option><option id="id.1.5.domain.brinkhafen" value="brinkhafen" data-index="15">Hannover: Brinkhafen</option><option id="id.1.5.domain.bult" value="bult" data-index="16">Hannover: Bult</option><option id="id.1.5.domain.burg" value="burg" data-index="17">Hannover: Burg</option><option id="id.1.5.domain.calenbergerneustadt" value="calenbergerneustadt" data-index="18">Hannover: Calenberger Neustadt</option><option id="id.1.5.domain.davenstedt" value="davenstedt" data-index="19">Hannover: Davenstedt</option><option id="id.1.5.domain.doehren" value="doehren" data-index="20">Hannover: Döhren</option><option id="id.1.5.domain.grossbuchholz" value="grossbuchholz" data-index="21">Hannover: Grossbuchholz</option><option id="id.1.5.domain.hainholz" value="hainholz" data-index="22">Hannover: Hainholz</option><option id="id.1.5.domain.heideviertel" value="heideviertel" data-index="23">Hannover: Heideviertel</option><option id="id.1.5.domain.herrenhausen" value="herrenhausen" data-index="24">Hannover: Herrenhausen</option><option id="id.1.5.domain.isernhagensued" value="isernhagensued" data-index="25">Hannover: Isernhagen Süd</option><option id="id.1.5.domain.kirchrode" value="kirchrode" data-index="26">Hannover: Kirchrode</option><option id="id.1.5.domain.kleefeld" value="kleefeld" data-index="27">Hannover: Kleefeld</option><option id="id.1.5.domain.lahe" value="lahe" data-index="28">Hannover: Lahe</option><option id="id.1.5.domain.ledeburg" value="ledeburg" data-index="29">Hannover: Ledeburg</option><option id="id.1.5.domain.leinhausen" value="leinhausen" data-index="30">Hannover: Leinhausen</option><option id="id.1.5.domain.limmer" value="limmer" data-index="31">Hannover: Limmer</option><option id="id.1.5.domain.lindenmitte" value="lindenmitte" data-index="32">Hannover: Linden Mitte</option><option id="id.1.5.domain.lindennord" value="lindennord" data-index="33">Hannover: Linden Nord</option><option id="id.1.5.domain.lindensued" value="lindensued" data-index="34">Hannover: Linden Sued</option><option id="id.1.5.domain.list" value="list" data-index="35">Hannover: List</option><option id="id.1.5.domain.marienwerder" value="marienwerder" data-index="36">Hannover: Marienwerder</option><option id="id.1.5.domain.misburgnord" value="misburgnord" data-index="37">Hannover: Misburg Nord</option><option id="id.1.5.domain.misburgsued" value="misburgsued" data-index="38">Hannover: Misburg Süd</option><option id="id.1.5.domain.mitte" value="mitte" data-index="39">Hannover: Mitte</option><option id="id.1.5.domain.mittelfeld" value="mittelfeld" data-index="40">Hannover: Mittelfeld</option><option id="id.1.5.domain.muehlenberg" value="muehlenberg" data-index="41">Hannover: Mühlenberg</option><option id="id.1.5.domain.nordhafen" value="nordhafen" data-index="42">Hannover: Nordhafen</option><option id="id.1.5.domain.nordstadt" value="nordstadt" data-index="43">Hannover: Nordstadt</option><option id="id.1.5.domain.oberricklingen" value="oberricklingen" data-index="44">Hannover: Oberricklingen</option><option id="id.1.5.domain.oststadt" value="oststadt" data-index="45">Hannover: Oststadt</option><option id="id.1.5.domain.ricklingen" value="ricklingen" data-index="46">Hannover: Ricklingen</option><option id="id.1.5.domain.sahlkamp" value="sahlkamp" data-index="47">Hannover: Sahlkamp</option><option id="id.1.5.domain.seelhorst" value="seelhorst" data-index="48">Hannover: Seelhorst</option><option id="id.1.5.domain.stoecken" value="stoecken" data-index="49">Hannover: Stöcken</option><option id="id.1.5.domain.suedstadt" value="suedstadt" data-index="50">Hannover: Südstadt</option><option id="id.1.5.domain.vahrenheide" value="vahrenheide" data-index="51">Hannover: Vahrenheide</option><option id="id.1.5.domain.vahrenwald" value="vahrenwald" data-index="52">Hannover: Vahrenwald</option><option id="id.1.5.domain.vinnhorst" value="vinnhorst" data-index="53">Hannover: Vinnhorst</option><option id="id.1.5.domain.waldhausen" value="waldhausen" data-index="54">Hannover: Waldhausen</option><option id="id.1.5.domain.waldheim" value="waldheim" data-index="55">Hannover: Waldheim</option><option id="id.1.5.domain.wettbergen" value="wettbergen" data-index="56">Hannover: Wettbergen</option><option id="id.1.5.domain.wuelfel" value="wuelfel" data-index="57">Hannover: Wülfel</option><option id="id.1.5.domain.wuelferode" value="wuelferode" data-index="58">Hannover: Wülferode</option><option id="id.1.5.domain.zoo" value="zoo" data-index="59">Hannover: Zoo</option><option id="id.1.5.domain.hemmingen" value="hemmingen" data-index="60">Hemmingen</option><option id="id.1.5.domain.hildesheim" value="hildesheim" data-index="61">Hildesheim</option><option id="id.1.5.domain.isernhagen" value="isernhagen" data-index="62">Isernhagen</option><option id="id.1.5.domain.laatzen" value="laatzen" data-index="63">Laatzen</option><option id="id.1.5.domain.langenhagen" value="langenhagen" data-index="64">Langenhagen</option><option id="id.1.5.domain.legacy" value="legacy" data-index="65">Legacy</option><option id="id.1.5.domain.lehrte" value="lehrte" data-index="66">Lehrte</option><option id="id.1.5.domain.lenthe" value="lenthe" data-index="67">Lenthe</option><option id="id.1.5.domain.neustadt" value="neustadt" data-index="68">Neustadt</option><option id="id.1.5.domain.nienburg" value="nienburg" data-index="69">Nienburg/Weser</option><option id="id.1.5.domain.obernkirchen" value="obernkirchen" data-index="70">Obernkirchen</option><option id="id.1.5.domain.pattensen" value="pattensen" data-index="71">Pattensen</option><option id="id.1.5.domain.peinewest" value="peinewest" data-index="72">Peine-West</option><option id="id.1.5.domain.ronnenberg" value="ronnenberg" data-index="73">Ronnenberg</option><option id="id.1.5.domain.sarstedt" value="sarstedt" data-index="74">Sarstedt</option><option id="id.1.5.domain.schwarmstedt" value="schwarmstedt" data-index="75">Schwarmstedt</option><option id="id.1.5.domain.seelze" value="seelze" data-index="76">Seelze</option><option id="id.1.5.domain.sehnde" value="sehnde" data-index="77">Sehnde</option><option id="id.1.5.domain.springe" value="springe" data-index="78">Springe</option><option id="id.1.5.domain.steinhude" value="steinhude" data-index="79">Steinhude</option><option id="id.1.5.domain.uetze" value="uetze" data-index="80">Uetze</option><option id="id.1.5.domain.umland" value="umland" data-index="81">Umland</option><option id="id.1.5.domain.wennigsen" value="wennigsen" data-index="82">Wennigsen</option><option id="id.1.5.domain.wunstorf" value="wunstorf" data-index="83">Wunstorf</option>
+	</select>
+
+
+	</div></div>
+		</div>
+
+	</div>
+</fieldset><fieldset class="gluon-section">
+
+	<div class="gluon-section-descr">Dein Knoten kann deine Internetverbindung nutzen, um darüber eine VPN-Verbindung zu anderen Knoten aufzubauen. Die dafür genutzte Bandbreite kannst du beschränken. Aktiviere die Option, falls keine per WLAN erreichbaren Nachbarknoten in deiner Nähe sind oder du deine Internetverbindung für das Mesh-Netzwerk zur Verfügung stellen möchtest.</div>
+	<div class="gluon-section-node">
+		<div id="section-id.1.6">
+			<div class="gluon-value" id="value-id.1.6.meshvpn" data-index="1"><label class="gluon-value-title" for="id.1.6.meshvpn">Internetverbindung nutzen (Mesh-VPN)</label>
+		<div class="gluon-value-field"><input class="gluon-input-checkbox" data-update="click change" type="checkbox" value="1" id="id.1.6.meshvpn" name="id.1.6.meshvpn" checked="checked" />
+<label for="id.1.6.meshvpn"></label>
+
+	</div></div><div class="gluon-value" id="value-id.1.6.limit_enabled" data-index="2" data-depends="[{&#34;id.1.6.meshvpn&#34;:true}]"><label class="gluon-value-title" for="id.1.6.limit_enabled">Bandbreite begrenzen</label>
+		<div class="gluon-value-field"><input class="gluon-input-checkbox" data-update="click change" type="checkbox" value="1" id="id.1.6.limit_enabled" name="id.1.6.limit_enabled" />
+<label for="id.1.6.limit_enabled"></label>
+
+	</div></div><div class="gluon-value" id="value-id.1.6.limit_ingress" data-index="3" data-depends="[{&#34;id.1.6.limit_enabled&#34;:true}]"><label class="gluon-value-title" for="id.1.6.limit_ingress">Downstream (Mbit/s)</label>
+		<div class="gluon-value-field"><input data-update="change" id="id.1.6.limit_ingress" name="id.1.6.limit_ingress" type="text" class="gluon-input-text" value="4" data-type="ufloat" />
+
+	</div></div><div class="gluon-value" id="value-id.1.6.limit_egress" data-index="4" data-depends="[{&#34;id.1.6.limit_enabled&#34;:true}]"><label class="gluon-value-title" for="id.1.6.limit_egress">Upstream (Mbit/s)</label>
+		<div class="gluon-value-field"><input data-update="change" id="id.1.6.limit_egress" name="id.1.6.limit_egress" type="text" class="gluon-input-text" value="0.5" data-type="ufloat" />
+
+	</div></div>
+		</div>
+
+	</div>
+</fieldset><fieldset class="gluon-section">
+
+	<div class="gluon-section-descr">Um deinen Knoten auf öffentlichen Karten anzeigen zu können, benötigen wir seine Koordinaten. Hier hast du die Möglichkeit, diese zu hinterlegen. Wenn dein Computer aktuell mit dem Internet verbunden ist, kann die Position auch auf der hier angezeigten Karte ausgewählt werden.</div>
+	<div class="gluon-section-node">
+		<div id="section-id.1.7">
+			<div class="gluon-value" id="value-id.1.7.location" data-index="1"><label class="gluon-value-title" for="id.1.7.location">Knotenposition setzen</label>
+		<div class="gluon-value-field"><input class="gluon-input-checkbox" data-update="click change" type="checkbox" value="1" id="id.1.7.location" name="id.1.7.location" checked="checked" />
+<label for="id.1.7.location"></label>
+
+	</div></div><div class="gluon-value" id="value-id.1.7.share_location" data-index="2" data-depends="[{&#34;id.1.7.location&#34;:true}]"><label class="gluon-value-title" for="id.1.7.share_location">Knotenposition veröffentlichen</label>
+		<div class="gluon-value-field"><input class="gluon-input-checkbox" data-update="click change" type="checkbox" value="1" id="id.1.7.share_location" name="id.1.7.share_location" checked="checked" />
+<label for="id.1.7.share_location"></label>
+
+	</div></div><div class="gluon-value" id="value-id.1.7.map" data-index="3" data-depends="[{&#34;id.1.7.location&#34;:true}]"><div id="id.1.7.map" class="gluon-osm-map" style="display: none"></div>
+<script type="text/javascript" src="/static/gluon-web-osm.js"></script>
+<script type="text/javascript">
+	(function() {
+		var elMap = document.getElementById("id.1.7.map");
+		var wrapper = elMap.parentNode;
+
+		var elLon, elLat;
+		window.addEventListener('gluon-update', function() {
+			elLon = document.getElementById("id.1.7.longitude");
+			elLat = document.getElementById("id.1.7.latitude");
+		}, {once: true});
+
+		initOSM("https:\/\/cdn.rawgit.com\/openlayers\/openlayers.github.io\/master\/en\/v5.2.0", function(createMap) {
+			elMap.style.display = '';
+
+			var pos = {"lon":9.7192900000000009,"lat":52.386696000000001};
+			var map = createMap(
+				elMap,
+				[pos.lon, pos.lat],
+				18,
+				true,
+				function(lonlat) {
+					if (elLon) {
+						elLon.value = lonlat[0].toFixed(6);
+						elLon.dispatchEvent(new Event('gluon-revalidate'));
+					}
+					if (elLat) {
+						elLat.value = lonlat[1].toFixed(6);
+						elLat.dispatchEvent(new Event('gluon-revalidate'));
+					}
+				}
+			);
+
+			wrapper.addEventListener('gluon-show', function() {
+				map.updateSize();
+			});
+		});
+	})();
+</script>
+
+	</div><div class="gluon-value" id="value-id.1.7.latitude" data-index="4" data-depends="[{&#34;id.1.7.location&#34;:true}]"><label class="gluon-value-title" for="id.1.7.latitude">Breitengrad</label>
+		<div class="gluon-value-field"><input data-update="change" id="id.1.7.latitude" name="id.1.7.latitude" type="text" class="gluon-input-text" value="52.386696" data-type="float" />
+
+	<br />
+		<div class="gluon-value-description">
+			z.B. 53.873621
+		</div></div></div><div class="gluon-value" id="value-id.1.7.longitude" data-index="5" data-depends="[{&#34;id.1.7.location&#34;:true}]"><label class="gluon-value-title" for="id.1.7.longitude">Längengrad</label>
+		<div class="gluon-value-field"><input data-update="change" id="id.1.7.longitude" name="id.1.7.longitude" type="text" class="gluon-input-text" value="9.71929" data-type="float" />
+
+	<br />
+		<div class="gluon-value-description">
+			z.B. 10.689901
+		</div></div></div>
+		</div>
+
+	</div>
+</fieldset><fieldset class="gluon-section">
+
+	<div class="gluon-section-descr">Bitte hinterlege hier einen Hinweis, um anderen zu ermöglichen, Kontakt mit dir aufzunehmen. Beachte, dass dieser Hinweis auch <em>öffentlich</em> im Internet, zusammen mit den Koordinaten deines Knotens, einsehbar sein wird. Das bedeutet, dass diese Informationen von jedem heruntergeladen und verarbeitet werden können. Für den Betrieb sind diese Informationen nicht erforderlich. Eine Speicherung erfolgt auf diesem Knoten. Die Daten können durch dich in diesem Menü eigenständig gelöscht werden.</div>
+	<div class="gluon-section-node">
+		<div id="section-id.1.8">
+			<div class="gluon-value" id="value-id.1.8.contact" data-index="1"><label class="gluon-value-title" for="id.1.8.contact">Kontakt</label>
+		<div class="gluon-value-field"><input data-update="change" id="id.1.8.contact" name="id.1.8.contact" type="text" class="gluon-input-text" data-type="minlength(1)" data-optional="true" />
+
+	<br />
+		<div class="gluon-value-description">
+			z.B. E-Mail oder Telefonnummer
+		</div></div></div>
+		</div>
+
+	</div>
+</fieldset>
+	</div>
+	<div class="gluon-page-actions">
+		<input class="gluon-button gluon-button-submit" type="submit" value="Speichern &#38; Neustarten" />
+
+	</div>
+</form>
+
+<script type="text/javascript" src="/static/gluon-web-model.js"></script>
+
+
+			</div>
+		</div>
+		<script src="js/spa.js" charset="utf-8"></script>
+	</body>
+</html>
