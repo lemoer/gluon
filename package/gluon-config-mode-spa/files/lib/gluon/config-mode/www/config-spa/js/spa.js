@@ -183,10 +183,22 @@ Vue.component('domain', {
 	`,
 });
 
+Vue.component('contact', {
+	data: globalState,
+	computed: {
+		hasContact: propertyExistsInSchema('wizard.contact')
+	},
+	template: `
+	<div v-if="hasContact" class="gluon-section-node">
+		<gl-option path="wizard.contact" description="e.g. mail or phone number"/>
+	</div>
+	`,
+})
+
 let vue = new Vue({
 	el: '#test',
 	data: globalState,
-	template: '<div> <domain /> <location /></div>',
+	template: '<div> <domain /> <location /> <contact /></div>',
 	created: async function () {
 		await this.load();
 	},
