@@ -48,6 +48,16 @@ function setByPath(t, propertyPath, value) {
 	Vue.set(obj, option, value);
 }
 
+function getByPath(t, propertyPath) {
+	let obj = t.config;
+
+	for (let key of propertyPath.split('.')) {
+		obj = obj[key];
+	}
+
+	return obj;
+}
+
 function propertyExistsInSchema(propertyPath) {
 	return function () {
 		return getSchemaByPath(this, propertyPath);
@@ -55,15 +65,8 @@ function propertyExistsInSchema(propertyPath) {
 };
 
 Vue.component('gl-option', {
-	data () {
-		return {
-			content: this.value,
-			options: options,
-			config: config
-		}
-	},
-	model: 'value',
-	props: ['name', 'value', 'description', 'path'],
+	data: globalState,
+	props: ['name', 'description', 'path'],
 	computed: {
 		id: function () {
 			return this.name.toLowerCase().replace(/ /g, '');
@@ -87,41 +90,37 @@ Vue.component('gl-option', {
 				})
 			}
 			return enums;
+		},
+		value: {
+			get() {
+				return getByPath(this, this.path);
+			},
+			set(newValue) {
+				if (this.schema.type == 'number')
+					newValue = parseFloat(newValue);
+
+				return setByPath(this, this.path, newValue);
+			}
 		}
 	},
 	template: `
 		<div class="gluon-value">
 			<label class="gluon-value-title" :for="id">{{ name }}</label>
 			<div class="gluon-value-field">
-				<input v-if="type === 'number'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
-				<select v-if="'enum' in schema" v-model="content" @change="onInput">
+				<input v-if="type === 'number'" v-model="value" class="gluon-input-text" type="text">
+				<select v-if="'enum' in schema" v-model="value">
 					<option value=""></option>
 					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
 				</select>
-				<input v-else-if="type === 'string'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
+				<input v-else-if="type === 'string'" v-model="value" class="gluon-input-text" type="text">
 				<template v-if="type === 'boolean'">
-					<input class="gluon-input-checkbox" type="checkbox" value="1" :id="id" v-model="content" @input="onInput">
+					<input class="gluon-input-checkbox" type="checkbox" value="1" :id="id" v-model="value">
 					<label :for="id"></label>
 				</template>
 				<br>
 				<div v-if="description" class="gluon-value-description">{{ description }}</div>
 			</div>
-		</div>`,
-	methods: {
-		onInput(event) {
-			// TODO: Remove this hacky stuff... Don't know yet, why this negation
-			//       is necessary here...
-			if (this.type === 'boolean') {
-				setByPath(this, this.path, !this.content);
-				return;
-			} else if (this.type === 'number') {
-				setByPath(this, this.path, parseFloat(this.content));
-				return;
-			}
-
-			setByPath(this, this.path, this.content);
-		},
-	},
+		</div>`
 });
 
 Vue.component('gl-object-enabler', {
@@ -158,11 +157,11 @@ Vue.component('location', {
 	},
 	template: `
 	<div v-if="hasLocation" class="gluon-section-node">
-		<gl-object-enabler name="Set Node Location" v-model="config.wizard.location" />
+		<!--<gl-object-enabler name="Set Node Location" />-->
 		<template v-if="config.wizard.location">
-			<gl-option name="Share Node Location" v-model.boolean="config.wizard.location.share_location" path="wizard.location.share_location" />
-			<gl-option name="Latitude" v-model.number="config.wizard.location.lat" path="wizard.location.lat" description="e.g. 53.873621" />
-			<gl-option name="Longitude" v-model.number="config.wizard.location.lon" path="wizard.location.lon" description="e.g. 10.689901" />
+			<gl-option name="Share Node Location" path="wizard.location.share_location" />
+			<gl-option name="Latitude" path="wizard.location.lat" description="e.g. 53.873621" />
+			<gl-option name="Longitude" path="wizard.location.lon" description="e.g. 10.689901" />
 		</template>
 	</div>
 	`,
@@ -175,7 +174,7 @@ Vue.component('domain', {
 	},
 	template: `
 	<div v-if="hasDomain" class="gluon-section-node">
-		<gl-option name="Domain" v-model="config.wizard.domain" type="dropdown" path="wizard.domain" />
+		<gl-option name="Domain" path="wizard.domain" />
 	</div>
 	`,
 });
