@@ -92,10 +92,10 @@ Vue.component('gl-input-checkbox-object-or-false', {
 
 Vue.component('gl-option', {
 	data: globalState,
-	props: ['name', 'description', 'path', 'objectOrFalse'],
+	props: ['description', 'path', 'objectOrFalse'],
 	computed: {
 		id: function () {
-			return this.name.toLowerCase().replace(/ /g, '');
+			return this.title.toLowerCase().replace(/ /g, '');
 		},
 		schema: function() {
 			if (this.path)
@@ -105,6 +105,9 @@ Vue.component('gl-option', {
 		},
 		type: function () {
 			return this.schema.type || 'string';
+		},
+		title: function () {
+			return this.schema.title;
 		},
 		enums: function () {
 			console.assert(this.schema.enum);
@@ -131,7 +134,7 @@ Vue.component('gl-option', {
 	},
 	template: `
 		<div class="gluon-value">
-			<label class="gluon-value-title" :for="id">{{ name }}</label>
+			<label class="gluon-value-title" :for="id">{{ title }}</label>
 			<div class="gluon-value-field">
 				<input v-if="type === 'number'" v-model="value" class="gluon-input-text" type="text">
 				<select v-if="'enum' in schema" v-model="value">
@@ -158,11 +161,11 @@ Vue.component('location', {
 	},
 	template: `
 	<div v-if="hasLocation" class="gluon-section-node">
-		<gl-option name="Set Node Location" path="wizard.location" object-or-false=true />
+		<gl-option path="wizard.location" object-or-false=true />
 		<template v-if="config.wizard.location">
-			<gl-option name="Share Node Location" path="wizard.location.share_location" />
-			<gl-option name="Latitude" path="wizard.location.lat" description="e.g. 53.873621" />
-			<gl-option name="Longitude" path="wizard.location.lon" description="e.g. 10.689901" />
+			<gl-option path="wizard.location.share_location" />
+			<gl-option path="wizard.location.lat" description="e.g. 53.873621" />
+			<gl-option path="wizard.location.lon" description="e.g. 10.689901" />
 		</template>
 	</div>
 	`,
@@ -175,7 +178,7 @@ Vue.component('domain', {
 	},
 	template: `
 	<div v-if="hasDomain" class="gluon-section-node">
-		<gl-option name="Domain" path="wizard.domain" />
+		<gl-option path="wizard.domain" />
 	</div>
 	`,
 });

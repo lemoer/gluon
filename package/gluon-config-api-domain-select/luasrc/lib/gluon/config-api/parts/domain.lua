@@ -50,6 +50,7 @@ function M.schema(site, platform)
 				properties = {
 					domain = {
 						type = 'string',
+						title = 'Domain',
 						enum = domain_codes,
 						enum_titles = domain_names
 					}

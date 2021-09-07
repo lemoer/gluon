@@ -7,7 +7,8 @@ function M.schema(site, platform)
 			wizard = {
 				properties = {
 					contact = {
-						type = 'string'
+						type = 'string',
+						title = 'Contact'
 					}
 				}
 			}

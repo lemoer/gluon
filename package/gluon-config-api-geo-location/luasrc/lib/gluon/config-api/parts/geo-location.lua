@@ -14,10 +14,11 @@ function M.schema(site, platform)
 				properties = {
 					location = {
 						type = 'object',
+						title = 'Set Node Location',
 						properties = {
-							share_location = { type = 'boolean' },
-							lat = { type = 'number' },
-							lon = { type = 'number' },
+							share_location = { type = 'boolean', title = 'Share Node Location' },
+							lat = { type = 'number', title = 'Latitude' },
+							lon = { type = 'number', title = 'Longitude' },
 							altitude = altitude
 						},
 						required = { 'lat', 'lon', 'share_location' }
