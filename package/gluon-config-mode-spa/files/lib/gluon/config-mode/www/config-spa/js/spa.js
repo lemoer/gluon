@@ -54,6 +54,7 @@ Vue.component('gl-option', {
 			<label class="gluon-value-title" :for="id">{{ name }}</label>
 			<div class="gluon-value-field">
 				<input v-if="type === 'number'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
+				<input v-if="type === 'text'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
 				<template v-if="type === 'boolean'">
 					<input class="gluon-input-checkbox" type="checkbox" value="1" :id="id" v-model="content" @input="onInput">
 					<label :for="id"></label>
@@ -120,10 +121,22 @@ Vue.component('location', {
 	`,
 });
 
+Vue.component('domain', {
+	data: globalState,
+	computed: {
+		hasDomain: propertyExistsInSchema('wizard.domain')
+	},
+	template: `
+	<div v-if="hasDomain" class="gluon-section-node">
+		<gl-option name="Domain" v-model="config.wizard.domain" type="text" />
+	</div>
+	`,
+});
+
 let vue = new Vue({
 	el: '#test',
 	data: globalState,
-	template: '<div><location /></div>',
+	template: '<div> <domain /> <location /></div>',
 	created: async function () {
 		await this.load();
 	},
