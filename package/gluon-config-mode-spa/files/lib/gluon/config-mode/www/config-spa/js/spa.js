@@ -46,7 +46,7 @@ Vue.component('gl-option', {
 	props: ['name', 'value', 'description', 'type'],
 	computed: {
 		id: function () {
-			return this.name.toLowerCase().replace(/ /mg, '');
+			return this.name.toLowerCase().replace(/ /g, '');
 		}
 	},
 	template: `
@@ -102,7 +102,7 @@ Vue.component('location', {
 	},
 	template: `
 	<div v-if="hasLocation" class="gluon-section-node">
-		<gl-option name="Set Location" type="boolean" v-model.boolean="show" />
+		<gl-option name="Set Node Location" type="boolean" v-model.boolean="show" />
 		<template v-if="config.wizard.location">
 			<gl-option name="Share Node Location" v-model.boolean="config.wizard.location.share_location" type="boolean" />
 			<gl-option name="Latitude" v-model.number="config.wizard.location.lat" description="e.g. 53.873621" type="number" />
