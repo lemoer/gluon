@@ -64,9 +64,35 @@ function propertyExistsInSchema(propertyPath) {
 	}
 };
 
+Vue.component('gl-input-checkbox-object-or-false', {
+	data () {
+		return {
+			content: this.value,
+			restoredContent: {}
+		}
+	},
+	model: 'value',
+	props: ['value', 'id'],
+	watch: {
+		content: function (val) {
+			if (val) {
+				this.$emit('input', this.restoredContent);
+			} else {
+				if (this.value)
+					this.restoredContent = this.value;
+
+				this.$emit('input', false);
+			}
+		},
+	},
+	template: `
+		<input class="gluon-input-checkbox" type="checkbox" :id="id" v-model="content">
+	`,
+});
+
 Vue.component('gl-option', {
 	data: globalState,
-	props: ['name', 'description', 'path'],
+	props: ['name', 'description', 'path', 'objectOrFalse'],
 	computed: {
 		id: function () {
 			return this.name.toLowerCase().replace(/ /g, '');
@@ -113,8 +139,9 @@ Vue.component('gl-option', {
 					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
 				</select>
 				<input v-else-if="type === 'string'" v-model="value" class="gluon-input-text" type="text">
-				<template v-if="type === 'boolean'">
-					<input class="gluon-input-checkbox" type="checkbox" value="1" :id="id" v-model="value">
+				<template v-if="type === 'boolean' || objectOrFalse">
+					<gl-input-checkbox-object-or-false v-if="objectOrFalse" v-model="value" :id="id" />
+					<input class="gluon-input-checkbox" v-if="!objectOrFalse" type="checkbox" value="1" :id="id" v-model="value">
 					<label :for="id"></label>
 				</template>
 				<br>
@@ -123,32 +150,6 @@ Vue.component('gl-option', {
 		</div>`
 });
 
-Vue.component('gl-object-enabler', {
-	data () {
-		return {
-			content: this.value,
-			restoredContent: {}
-		}
-	},
-	model: 'value',
-	props: ['name', 'value', 'description'],
-	watch: {
-		content: function (val) {
-			if (val) {
-				this.$emit('input', this.restoredContent);
-			} else {
-				if (this.value)
-					this.restoredContent = this.value;
-
-				this.$emit('input', false);
-			}
-		},
-	},
-	template: `
-		<gl-option :name="name" v-model="content" :description="description"
-		           type="boolean"/>
-	`,
-});
 
 Vue.component('location', {
 	data: globalState,
@@ -157,7 +158,7 @@ Vue.component('location', {
 	},
 	template: `
 	<div v-if="hasLocation" class="gluon-section-node">
-		<!--<gl-object-enabler name="Set Node Location" />-->
+		<gl-option name="Set Node Location" path="wizard.location" object-or-false=true />
 		<template v-if="config.wizard.location">
 			<gl-option name="Share Node Location" path="wizard.location.share_location" />
 			<gl-option name="Latitude" path="wizard.location.lat" description="e.g. 53.873621" />
