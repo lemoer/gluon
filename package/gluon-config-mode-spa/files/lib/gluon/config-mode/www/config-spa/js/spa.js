@@ -76,33 +76,41 @@ Vue.component('gl-option', {
 	},
 });
 
-Vue.component('location', {
-	data: function () {
+Vue.component('gl-object-enabler', {
+	data () {
 		return {
-			config: config,
-			options: options,
-			show: true,
-			locationBackup: {}
+			content: this.value,
+			restoredContent: {}
 		}
 	},
-	computed: {
-		hasLocation: propertyExistsInSchema('wizard.location')
-	},
+	model: 'value',
+	props: ['name', 'value', 'description'],
 	watch: {
-		show: function (val) {
+		content: function (val) {
 			if (val) {
-				Vue.set(config.wizard, 'location', this.locationBackup);
+				this.$emit('input', this.restoredContent);
 			} else {
-				if (config.wizard.location)
-					this.locationBackup = config.wizard.location;
+				if (this.value)
+					this.restoredContent = this.value;
 
-				Vue.set(config.wizard, 'location', false);
+				this.$emit('input', false);
 			}
 		},
 	},
 	template: `
+		<gl-option :name="name" v-model="content" :description="description"
+		           type="boolean"/>
+	`,
+});
+
+Vue.component('location', {
+	data: globalState,
+	computed: {
+		hasLocation: propertyExistsInSchema('wizard.location')
+	},
+	template: `
 	<div v-if="hasLocation" class="gluon-section-node">
-		<gl-option name="Set Node Location" type="boolean" v-model.boolean="show" />
+		<gl-object-enabler name="Set Node Location" v-model="config.wizard.location" />
 		<template v-if="config.wizard.location">
 			<gl-option name="Share Node Location" v-model.boolean="config.wizard.location.share_location" type="boolean" />
 			<gl-option name="Latitude" v-model.number="config.wizard.location.lat" description="e.g. 53.873621" type="number" />
