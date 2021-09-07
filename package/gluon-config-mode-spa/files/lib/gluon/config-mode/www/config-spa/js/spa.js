@@ -33,6 +33,21 @@ function getSchemaByPath(t, propertyPath) {
 	return schema;
 }
 
+function setByPath(t, propertyPath, value) {
+	let obj = t.config;
+	let path = propertyPath.split('.');
+	let option = path.splice(-1);
+
+	for (let key of path) {
+		if (!(key in obj)) {
+			Vue.set(obj, key, {})
+		}
+		obj = obj[key];
+	}
+
+	Vue.set(obj, option, value);
+}
+
 function propertyExistsInSchema(propertyPath) {
 	return function () {
 		return getSchemaByPath(this, propertyPath);
@@ -43,25 +58,32 @@ Vue.component('gl-option', {
 	data () {
 		return {
 			content: this.value,
-			options: options
+			options: options,
+			config: config
 		}
 	},
 	model: 'value',
-	props: ['name', 'value', 'description', 'type', 'path'],
+	props: ['name', 'value', 'description', 'path'],
 	computed: {
 		id: function () {
 			return this.name.toLowerCase().replace(/ /g, '');
 		},
+		schema: function() {
+			if (this.path)
+				return getSchemaByPath(this, this.path);
+			else
+				return {};
+		},
+		type: function () {
+			return this.schema.type || 'string';
+		},
 		enums: function () {
-			if (!this.path)
-				return [];
-
-			let schema = getSchemaByPath(this, this.path);
+			console.assert(this.schema.enum);
 			let enums = [];
-			for (var i = 0; i < schema.enum.length; i++) {
+			for (var i = 0; i < this.schema.enum.length; i++) {
 				enums.push({
-					value: schema.enum[i],
-					title: schema.enum_titles[i]
+					value: this.schema.enum[i],
+					title: this.schema.enum_titles[i]
 				})
 			}
 			return enums;
@@ -72,11 +94,11 @@ Vue.component('gl-option', {
 			<label class="gluon-value-title" :for="id">{{ name }}</label>
 			<div class="gluon-value-field">
 				<input v-if="type === 'number'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
-				<input v-if="type === 'text'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
-				<select v-if="type === 'dropdown'" v-model="content" @change="onInput">
+				<select v-if="'enum' in schema" v-model="content" @change="onInput">
 					<option value=""></option>
 					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
 				</select>
+				<input v-else-if="type === 'string'" v-model="content" class="gluon-input-text" @input="onInput" type="text">
 				<template v-if="type === 'boolean'">
 					<input class="gluon-input-checkbox" type="checkbox" value="1" :id="id" v-model="content" @input="onInput">
 					<label :for="id"></label>
@@ -87,14 +109,17 @@ Vue.component('gl-option', {
 		</div>`,
 	methods: {
 		onInput(event) {
-			// TODO: Remove this hacky stuff...
-			if (this.type == 'boolean') {
-				this.$emit('input', !this.content);
+			// TODO: Remove this hacky stuff... Don't know yet, why this negation
+			//       is necessary here...
+			if (this.type === 'boolean') {
+				setByPath(this, this.path, !this.content);
+				return;
+			} else if (this.type === 'number') {
+				setByPath(this, this.path, parseFloat(this.content));
 				return;
 			}
 
-			// Can add validation here
-			this.$emit('input', this.content);
+			setByPath(this, this.path, this.content);
 		},
 	},
 });
@@ -135,9 +160,9 @@ Vue.component('location', {
 	<div v-if="hasLocation" class="gluon-section-node">
 		<gl-object-enabler name="Set Node Location" v-model="config.wizard.location" />
 		<template v-if="config.wizard.location">
-			<gl-option name="Share Node Location" v-model.boolean="config.wizard.location.share_location" type="boolean" />
-			<gl-option name="Latitude" v-model.number="config.wizard.location.lat" description="e.g. 53.873621" type="number" />
-			<gl-option name="Longitude" v-model.number="config.wizard.location.lon" description="e.g. 10.689901" type="number" />
+			<gl-option name="Share Node Location" v-model.boolean="config.wizard.location.share_location" path="wizard.location.share_location" />
+			<gl-option name="Latitude" v-model.number="config.wizard.location.lat" path="wizard.location.lat" description="e.g. 53.873621" />
+			<gl-option name="Longitude" v-model.number="config.wizard.location.lon" path="wizard.location.lon" description="e.g. 10.689901" />
 		</template>
 	</div>
 	`,
