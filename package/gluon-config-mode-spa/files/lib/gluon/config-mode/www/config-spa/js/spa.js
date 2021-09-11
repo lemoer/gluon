@@ -43,7 +43,6 @@ async function getTranslator(lang) {
 	}
 
 	Pomo.load(poData, { format: 'po', mode: 'literal'});
-	Pomo.returnStrings = true;
 	Pomo.unescapeStrings = true;
 	await wrapByPromise(Pomo.ready);
 
@@ -53,7 +52,7 @@ async function getTranslator(lang) {
 		if (translation === undefined)
 			return msg;
 
-		return translation;
+		return translation.translation;
 	}
 
 	return pomoTranslator;
@@ -177,6 +176,9 @@ Vue.component('gl-option', {
 
 				return setByPath(this, this.path, newValue);
 			}
+		},
+		translatedDescription: function () {
+			return this.translator(this.description)
 		}
 	},
 	template: `
@@ -195,7 +197,7 @@ Vue.component('gl-option', {
 					<label :for="id"></label>
 				</template>
 				<br>
-				<div v-if="description" class="gluon-value-description">{{ description }}</div>
+				<div v-if="description" class="gluon-value-description">{{ translatedDescription }}</div>
 			</div>
 		</div>`
 });
