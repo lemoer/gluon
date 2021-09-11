@@ -38,12 +38,6 @@ msgstr "Client-Netz aktivieren (Access Point)"
 msgid "Enable mesh network (802.11s)"
 msgstr "Mesh-Netz aktivieren (802.11s)"
 
-msgid "HT Mode"
-msgstr "HT-Modus"
-
-msgid "Node will be installed outdoors"
-msgstr "Knoten wird im Außenbereich betrieben"
-
 msgid "Outdoor Installation"
 msgstr "Outdoor-Installation"
 
@@ -52,9 +46,6 @@ msgstr "HT-Modus"
 
 msgid "Node will be installed outdoors"
 msgstr "Knoten wird im Außenbereich betrieben"
-
-msgid "Outdoor Installation"
-msgstr "Outdoor-Installation"
 
 msgid "Transmission power"
 msgstr "Sendeleistung"
