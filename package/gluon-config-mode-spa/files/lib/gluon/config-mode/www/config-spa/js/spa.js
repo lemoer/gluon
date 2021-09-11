@@ -149,10 +149,7 @@ Vue.component('gl-option', {
 			return this.title.toLowerCase().replace(/ /g, '');
 		},
 		schema: function() {
-			if (this.path)
-				return getSchemaByPath(this, this.path);
-			else
-				return {};
+			return getSchemaByPath(this, this.path);
 		},
 		type: function () {
 			return this.schema.type || 'string';
@@ -161,7 +158,6 @@ Vue.component('gl-option', {
 			return this.translator(this.schema.title);
 		},
 		enums: function () {
-			console.assert(this.schema.enum);
 			let enums = [];
 			for (var i = 0; i < this.schema.enum.length; i++) {
 				enums.push({
