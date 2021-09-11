@@ -200,6 +200,25 @@ Vue.component('gl-option', {
 		</div>`
 });
 
+Vue.component('gl-descr', {
+	data: globalState,
+	created: async function() {
+		this.translator = await translatorPromise;
+	},
+	computed: {
+		translated: function () {
+			let trimAndRemoveNewlines =
+				(txt) => txt.split('\n').map((s) => s.trim()).join(' ').trim();
+			let content = trimAndRemoveNewlines(unescape(this.$slots.default[0].text));
+			return this.translator(content);
+		}
+	},
+	template: `
+		<div class="gluon-section-descr" v-html="translated">
+		</div>
+	`
+})
+
 
 Vue.component('location', {
 	data: globalState,
@@ -208,6 +227,10 @@ Vue.component('location', {
 	},
 	template: `
 	<div v-if="hasLocation" class="gluon-section-node">
+		<gl-descr>
+			If you want the location of your node to be displayed on public
+			maps, you can enter its coordinates here.
+		</gl-descr>
 		<gl-option path="wizard.location" object-or-false=true />
 		<template v-if="config.wizard.location">
 			<gl-option path="wizard.location.share_location" />
@@ -237,6 +260,14 @@ Vue.component('contact', {
 	},
 	template: `
 	<div v-if="hasContact" class="gluon-section-node">
+		<gl-descr>
+			Please provide your contact information here to allow others to contact
+			you. Note that this information will be visible %3Cem%3Epublicly%3C/em%3E
+			on the internet together with your node's coordinates. This means it
+			can be downloaded and processed by anyone. This information is not
+			required to operate a node. If you chose to enter data, it will be
+			stored on this node and can be deleted by yourself at any time.
+		</gl-descr>
 		<gl-option path="wizard.contact" description="e.g. mail or phone number"/>
 	</div>
 	`,
