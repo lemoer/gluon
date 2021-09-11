@@ -14,9 +14,9 @@ function M.schema(site, platform)
 				properties = {
 					location = {
 						type = 'object',
-						title = 'Set Node Location',
+						title = 'Set node position',
 						properties = {
-							share_location = { type = 'boolean', title = 'Share Node Location' },
+							share_location = { type = 'boolean', title = 'Advertise node position' },
 							lat = { type = 'number', title = 'Latitude' },
 							lon = { type = 'number', title = 'Longitude' },
 							altitude = altitude

@@ -1,0 +1,18 @@
+--- package/gluon-config-mode-spa/files/lib/gluon/config-mode/www/config-spa/js/pomo.js.orig	2021-09-11 15:45:30.881852651 +0200
++++ package/gluon-config-mode-spa/files/lib/gluon/config-mode/www/config-spa/js/pomo.js	2021-09-11 15:45:20.009825666 +0200
+@@ -505,6 +505,8 @@
+                         continue;
+                     case 'msgstr':
+                         if (line.indexOf('msgstr ""') === 0) {
++                            if (!next_line)
++                                continue
+                             possible = next_line.trim();
+                             if (possible.indexOf('"') === 0) {
+                                 message.translation = multilineExtract(part_lines);
+@@ -910,4 +912,4 @@
+ else {
+     window['Pomo'] = instance;
+ }
+-})(this);
+\ No newline at end of file
++})(this);

@@ -7,8 +7,56 @@ let options = {};
 function globalState() {
 	return {
 		config: config,
-		options: options
+		options: options,
+		translator: (msg) => msg // properly instantiated later
 	}
+}
+
+// As we want to access the tranlator from multiple components, we store the
+// promise here. That way the promise can then be awaited in all those components.
+let language = (navigator.language || navigator.userLanguage).split('-')[0];
+let translatorPromise = getTranslator(language);
+
+async function getTranslator(lang) {
+	let enTranslator = (msg) => msg;
+
+	switch (lang) {
+		case "en":
+			return enTranslator;
+		case "de":
+			break;
+		case "fr":
+			break;
+		default:
+			console.warn('Locale for ' + lang + ' not found. Using english translation instead.');
+			return enTranslator;
+	}
+
+	let poResponse = await fetch('i18n/' + lang + '.po');
+	let poData = await poResponse.text();
+
+	// wrap async
+	let wrapByPromise = (readyFun) => {
+		return new Promise(resolve => {
+			readyFun(resolve);
+		})
+	}
+
+	Pomo.load(poData, { format: 'po', mode: 'literal'});
+	Pomo.returnStrings = true;
+	Pomo.unescapeStrings = true;
+	await wrapByPromise(Pomo.ready);
+
+	function pomoTranslator(msg) {
+		let translation = Pomo.getText(msg, { error: () => {} });
+
+		if (translation === undefined)
+			return msg;
+
+		return translation;
+	}
+
+	return pomoTranslator;
 }
 
 async function loadToObject(obj, url, method) {
@@ -93,6 +141,9 @@ Vue.component('gl-input-checkbox-object-or-false', {
 Vue.component('gl-option', {
 	data: globalState,
 	props: ['description', 'path', 'objectOrFalse'],
+	created: async function() {
+		this.translator = await translatorPromise;
+	},
 	computed: {
 		id: function () {
 			return this.title.toLowerCase().replace(/ /g, '');
@@ -107,7 +158,7 @@ Vue.component('gl-option', {
 			return this.schema.type || 'string';
 		},
 		title: function () {
-			return this.schema.title;
+			return this.translator(this.schema.title);
 		},
 		enums: function () {
 			console.assert(this.schema.enum);
@@ -115,7 +166,7 @@ Vue.component('gl-option', {
 			for (var i = 0; i < this.schema.enum.length; i++) {
 				enums.push({
 					value: this.schema.enum[i],
-					title: this.schema.enum_titles[i]
+					title: this.translator(this.schema.enum_titles[i])
 				})
 			}
 			return enums;
