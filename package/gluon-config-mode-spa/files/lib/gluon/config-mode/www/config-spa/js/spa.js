@@ -279,7 +279,26 @@ Vue.component('contact', {
 
 let wizard = Vue.component('wizard', {
 	template: `
-		<div> <domain /> <location /> <contact /></div>
+	<div>
+		<h2 name="content">Willkommen!</h2>
+
+		<p>
+			Willkommen zum Einrichtungsassistenten für deinen neuen Hannoveraner
+			Freifunk-Knoten. Fülle das folgende Formular deinen Vorstellungen
+			entsprechend aus und sende es ab.
+		</p>
+
+		<fieldset class="gluon-section">
+			<gl-descr>
+				Dieser Knoten aktualisiert seine Firmware automatisch, sobald
+				eine neue Version vorliegt.
+			</gl-descr>
+		</fieldset>
+
+		<domain />
+		<location />
+		<contact />
+	</div>
 	`
 });
 
