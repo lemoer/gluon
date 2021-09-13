@@ -1,6 +1,8 @@
 
 const CONFIG_URL = '/cgi-bin/api/v1/config';
 
+Vue.use(VueRouter);
+
 let config = {};
 let options = {};
 
@@ -273,12 +275,24 @@ Vue.component('contact', {
 		<gl-option path="wizard.contact" description="e.g. mail or phone number"/>
 	</div>
 	`,
-})
+});
+
+let wizard = Vue.component('wizard', {
+	template: `
+		<div> <domain /> <location /> <contact /></div>
+	`
+});
+
+const router = new VueRouter({
+	routes: [
+		{ path: '/wizard', component: wizard }
+	]
+});
 
 let vue = new Vue({
-	el: '#test',
+	el: '#app',
 	data: globalState,
-	template: '<div> <domain /> <location /> <contact /></div>',
+	router: router,
 	created: async function () {
 		await this.load();
 	},
