@@ -223,6 +223,46 @@ Vue.component('gl-descr', {
 	`
 })
 
+Vue.component('gl-topmenu', {
+	template: `
+	<div class="tabmenu1">
+			<ul class="tabmenu l1">
+
+				<li class="tabmenu-item-info">
+					<router-link to="/admin/info" active-class="active">Info</router-link>
+				</li>
+
+				<li class="tabmenu-item-remote">
+					<router-link to="/admin/remote" active-class="active">Remotezugriff</router-link>
+				</li>
+
+				<li class="tabmenu-item-wifi-config">
+					<router-link to="/admin/wifi-config" active-class="active">WLAN</router-link>
+				</li>
+
+				<li class="tabmenu-item-privatewifi">
+					<router-link to="/admin/privatewifi" active-class="active">Privates WLAN</router-link>
+				</li>
+
+				<li class="tabmenu-item-network">
+					<router-link to="/admin/network" active-class="active">Netzwerk</router-link>
+				</li>
+
+				<li class="tabmenu-item-autoupdater">
+					<router-link to="/admin/autoupdater" active-class="active">Automatische Updates</router-link>
+				</li>
+
+				<li class="tabmenu-item-upgrade">
+					<router-link to="/admin/upgrade" active-class="active">Firmware aktualisieren</router-link>
+				</li>
+
+			</ul>
+			<br style="clear:both" />
+
+		</div>
+	`
+})
+
 
 Vue.component('location', {
 	data: globalState,
@@ -279,7 +319,7 @@ Vue.component('contact', {
 
 let wizard = Vue.component('wizard', {
 	template: `
-	<div>
+	<div id="maincontent">
 		<h2 name="content">Willkommen!</h2>
 
 		<p>
@@ -302,9 +342,34 @@ let wizard = Vue.component('wizard', {
 	`
 });
 
+let admin = Vue.component('admin', {
+	template: `
+	<div>
+		<gl-topmenu />
+		<router-view />
+	</div>
+	`
+});
+
+let remote = Vue.component('remote', {
+	template: `
+	<div>
+		<h1>Test</h1>
+	</div>
+	`
+})
+
 const router = new VueRouter({
 	routes: [
 		{ path: '/wizard', component: wizard },
+		{
+			path: '/admin',
+			component: admin,
+			redirect: '/admin/remote',
+			children: [
+				{ path: 'remote', component: remote }
+			]
+		},
 		{ path: '/', redirect: '/wizard'}
 	]
 });

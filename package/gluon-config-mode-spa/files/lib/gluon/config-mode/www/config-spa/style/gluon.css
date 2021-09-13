@@ -26,7 +26,9 @@ ul.tabmenu {
  list-style:none;
  padding:0;
  margin:2em 0;
- display:inline-flex
+ display:inline-flex;
+ flex-wrap: wrap;
+ justify-content: center;
 }
 ul.tabmenu li {
  white-space:nowrap;
@@ -45,7 +47,7 @@ ul.tabmenu li a {
 ul.tabmenu li a:hover {
  background:#ffe9b3
 }
-ul.tabmenu li.active a {
+ul.tabmenu li a.active {
  font-weight:bold;
  background:white;
  color:#333

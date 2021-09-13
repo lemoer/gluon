@@ -22,26 +22,22 @@
 			</div>
 
 			<ul id="topmenu">
-				<li><router-link class="topcat" to="wizard" active-class="active">Wizard</router-link></li>
-				<li><router-link class="topcat" to="admin"  active-class="active">Erweiterte Einstellungen</router-link></li>
+				<li><router-link class="topcat" to="/wizard" active-class="active">Wizard</router-link></li>
+				<li><router-link class="topcat" to="/admin"  active-class="active">Erweiterte Einstellungen</router-link></li>
 			</ul>
 		</div>
 
 		<div id="maincontainer">
-			<div id="maincontent">
-				<noscript>
-					<div class="errorbox">
-						<strong>JavaScript benötigt!</strong><br />
-						Bitte aktiviere JavaScript in deinem Browser, damit das Webinterface korrekt funktionieren kann.
-					</div>
-				</noscript>
-
-				<form method="post" enctype="multipart/form-data" action="/cgi-bin/config/wizard" data-update="reset">
-					<router-view></router-view>
+			<noscript>
+				<div class="errorbox">
+					<strong>JavaScript benötigt!</strong><br />
+					Bitte aktiviere JavaScript in deinem Browser, damit das Webinterface korrekt funktionieren kann.
 				</div>
-			</div>
+			</noscript>
+			<router-view></router-view>
 		</div>
-		<script type="text/javascript" src="/static/gluon-web-model.js"></script>
-		<script src="js/spa.js" charset="utf-8"></script>
+	</div>
+	<script type="text/javascript" src="/static/gluon-web-model.js"></script>
+	<script src="js/spa.js" charset="utf-8"></script>
 	</body>
-	</html>
+</html>
