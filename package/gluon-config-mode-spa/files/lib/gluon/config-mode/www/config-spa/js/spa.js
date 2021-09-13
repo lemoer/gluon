@@ -230,7 +230,7 @@ Vue.component('location', {
 		hasLocation: propertyExistsInSchema('wizard.location')
 	},
 	template: `
-	<div v-if="hasLocation" class="gluon-section-node">
+	<fieldset v-if="hasLocation" class="gluon-section">
 		<gl-descr>
 			If you want the location of your node to be displayed on public
 			maps, you can enter its coordinates here.
@@ -241,7 +241,7 @@ Vue.component('location', {
 			<gl-option path="wizard.location.lat" description="e.g. 53.873621" />
 			<gl-option path="wizard.location.lon" description="e.g. 10.689901" />
 		</template>
-	</div>
+	</fieldset>
 	`,
 });
 
@@ -251,9 +251,9 @@ Vue.component('domain', {
 		hasDomain: propertyExistsInSchema('wizard.domain')
 	},
 	template: `
-	<div v-if="hasDomain" class="gluon-section-node">
+	<fieldset v-if="hasDomain" class="gluon-section">
 		<gl-option path="wizard.domain" />
-	</div>
+	</fieldset>
 	`,
 });
 
@@ -263,7 +263,7 @@ Vue.component('contact', {
 		hasContact: propertyExistsInSchema('wizard.contact')
 	},
 	template: `
-	<div v-if="hasContact" class="gluon-section-node">
+	<fieldset v-if="hasContact" class="gluon-section">
 		<gl-descr>
 			Please provide your contact information here to allow others to contact
 			you. Note that this information will be visible %3Cem%3Epublicly%3C/em%3E
@@ -273,7 +273,7 @@ Vue.component('contact', {
 			stored on this node and can be deleted by yourself at any time.
 		</gl-descr>
 		<gl-option path="wizard.contact" description="e.g. mail or phone number"/>
-	</div>
+	</fieldset>
 	`,
 });
 
