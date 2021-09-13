@@ -304,7 +304,8 @@ let wizard = Vue.component('wizard', {
 
 const router = new VueRouter({
 	routes: [
-		{ path: '/wizard', component: wizard }
+		{ path: '/wizard', component: wizard },
+		{ path: '/', redirect: '/wizard'}
 	]
 });
 
