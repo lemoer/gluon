@@ -237,6 +237,9 @@ Vue.component('gl-option', {
 				if (this.schema.pattern) {
 					return (this.value || "").match(RegExp(this.schema.pattern));
 				}
+
+				if (this.schema.enum && (this.schema.enum.indexOf(this.value) == -1))
+					return false;
 			}
 
 			return true;
@@ -247,7 +250,7 @@ Vue.component('gl-option', {
 			<label class="gluon-value-title" :for="id">{{ title }}</label>
 			<div class="gluon-value-field">
 				<input v-if="type === 'number'" v-model="value" :class="['gluon-input-text', {'gluon-input-invalid': !isValid}]" type="text">
-				<select v-if="'enum' in schema" v-model="value">
+				<select v-if="'enum' in schema" v-model="value" :class="{'gluon-input-invalid': !isValid}">
 					<option value=""></option>
 					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
 				</select>
