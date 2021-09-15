@@ -233,6 +233,10 @@ Vue.component('gl-option', {
 				} else if (this.schema.format == "ipv6") {
 					return isValidIPv6(this.value || "");
 				}
+
+				if (this.schema.pattern) {
+					return (this.value || "").match(RegExp(this.schema.pattern));
+				}
 			}
 
 			return true;
