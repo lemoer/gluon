@@ -144,7 +144,7 @@ function isValidIPv6(str) {
 	return false;
 }
 
-Vue.component('gl-input-checkbox-object-or-false', {
+Vue.component('gl-input-checkbox-object-or-undefined', {
 	data () {
 		return {
 			content: this.value,
@@ -161,7 +161,7 @@ Vue.component('gl-input-checkbox-object-or-false', {
 				if (this.value)
 					this.restoredContent = this.value;
 
-				this.$emit('input', false);
+				this.$emit('input', undefined);
 			}
 		},
 	},
@@ -172,7 +172,7 @@ Vue.component('gl-input-checkbox-object-or-false', {
 
 Vue.component('gl-option', {
 	data: globalState,
-	props: ['description', 'path', 'objectOrFalse'],
+	props: ['description', 'path', 'objectOrUndefined'],
 	created: async function() {
 		this.translator = await translatorPromise;
 	},
@@ -255,9 +255,9 @@ Vue.component('gl-option', {
 					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
 				</select>
 				<input v-else-if="type === 'string'" v-model="value" :class="['gluon-input-text', {'gluon-input-invalid': !isValid}]" type="text">
-				<template v-if="type === 'boolean' || objectOrFalse">
-					<gl-input-checkbox-object-or-false v-if="objectOrFalse" v-model="value" :id="id" />
-					<input class="gluon-input-checkbox" v-if="!objectOrFalse" type="checkbox" value="1" :id="id" v-model="value">
+				<template v-if="type === 'boolean' || objectOrUndefined">
+					<gl-input-checkbox-object-or-undefined v-if="objectOrUndefined" v-model="value" :id="id" />
+					<input class="gluon-input-checkbox" v-if="!objectOrUndefined" type="checkbox" value="1" :id="id" v-model="value">
 					<label :for="id"></label>
 				</template>
 				<br>
@@ -337,7 +337,7 @@ Vue.component('location', {
 			If you want the location of your node to be displayed on public
 			maps, you can enter its coordinates here.
 		</gl-descr>
-		<gl-option path="wizard.location" object-or-false=true />
+		<gl-option path="wizard.location" object-or-undefined=true />
 		<template v-if="config.wizard.location">
 			<gl-option path="wizard.location.share_location" />
 			<gl-option path="wizard.location.lat" description="e.g. 53.873621" />
