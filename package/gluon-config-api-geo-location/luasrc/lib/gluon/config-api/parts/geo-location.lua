@@ -17,8 +17,18 @@ function M.schema(site, platform)
 						title = 'Set node position',
 						properties = {
 							share_location = { type = 'boolean', title = 'Advertise node position' },
-							lat = { type = 'number', title = 'Latitude' },
-							lon = { type = 'number', title = 'Longitude' },
+							lat = {
+								type = 'number',
+								title = 'Latitude',
+								minimum = -90,
+								maximum = 90
+							},
+							lon = {
+								type = 'number',
+								title = 'Longitude',
+								minimum = -180,
+								maximum = 180
+							},
 							altitude = altitude
 						},
 						required = { 'lat', 'lon', 'share_location' }

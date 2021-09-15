@@ -173,26 +173,44 @@ Vue.component('gl-option', {
 				return getByPath(this, this.path);
 			},
 			set(newValue) {
-				if (this.schema.type == 'number')
-					newValue = parseFloat(newValue);
+				if (this.schema.type == 'number' && Number(newValue)) {
+					// We only apply the conversion, if possible. Otherwise we
+					// just store the value as string directly.
+					newValue = Number(newValue);
+				}
 
 				return setByPath(this, this.path, newValue);
 			}
 		},
 		translatedDescription: function () {
 			return this.translator(this.description)
+		},
+		isValid: function () {
+			if (this.type == 'number') {
+				if (!Number(this.value))
+					return false;
+
+				if ((this.schema.minimum !== undefined) && (this.value < this.schema.minimum))
+					return false;
+
+				if ((this.schema.maximum !== undefined) && (this.value > this.schema.maximum))
+					return false;
+
+			}
+
+			return true;
 		}
 	},
 	template: `
 		<div class="gluon-value">
 			<label class="gluon-value-title" :for="id">{{ title }}</label>
 			<div class="gluon-value-field">
-				<input v-if="type === 'number'" v-model="value" class="gluon-input-text" type="text">
+				<input v-if="type === 'number'" v-model="value" :class="['gluon-input-text', {'gluon-input-invalid': !isValid}]" type="text">
 				<select v-if="'enum' in schema" v-model="value">
 					<option value=""></option>
 					<option v-for="e in enums" :value="e.value">{{ e.title }}</option>
 				</select>
-				<input v-else-if="type === 'string'" v-model="value" class="gluon-input-text" type="text">
+				<input v-else-if="type === 'string'" v-model="value" :class="['gluon-input-text', {'gluon-input-invalid': !isValid}]" type="text">
 				<template v-if="type === 'boolean' || objectOrFalse">
 					<gl-input-checkbox-object-or-false v-if="objectOrFalse" v-model="value" :id="id" />
 					<input class="gluon-input-checkbox" v-if="!objectOrFalse" type="checkbox" value="1" :id="id" v-model="value">
@@ -386,5 +404,6 @@ let vue = new Vue({
 			await loadToObject(this.config, CONFIG_URL, 'GET');
 			await loadToObject(this.options, CONFIG_URL, 'OPTIONS');
 		}
-	}
+	},
+
 });
