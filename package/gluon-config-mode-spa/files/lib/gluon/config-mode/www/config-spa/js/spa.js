@@ -447,6 +447,9 @@ let vue = new Vue({
 		async load() {
 			await loadToObject(this.config, CONFIG_URL, 'GET');
 			await loadToObject(this.options, CONFIG_URL, 'OPTIONS');
+		},
+		printConfig() {
+			console.log(JSON.stringify(config, null, '   '));
 		}
 	},
 	computed: {
