@@ -54,7 +54,8 @@ function M.schema(site, platform)
 						enum = domain_codes,
 						enum_titles = domain_names
 					}
-				}
+				},
+				required = { 'domain' }
 			}
 		}
 	}
