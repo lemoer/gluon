@@ -405,5 +405,22 @@ let vue = new Vue({
 			await loadToObject(this.options, CONFIG_URL, 'OPTIONS');
 		}
 	},
+	computed: {
+		allOptionsValid: function () {
+			function walkAndCheckOptions(el) {
+				if (el.isValid === false)
+					return false;
 
+				for (let child of (el.$children || [])) {
+					if (!walkAndCheckOptions(child))
+						return false;
+				}
+
+				return true;
+			}
+
+			// recusively walk over all elements and look for invalid options.
+			return walkAndCheckOptions(this);
+		}
+	}
 });
