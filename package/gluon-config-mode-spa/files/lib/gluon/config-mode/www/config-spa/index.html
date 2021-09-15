@@ -34,7 +34,7 @@
 					Bitte aktiviere JavaScript in deinem Browser, damit das Webinterface korrekt funktionieren kann.
 				</div>
 			</noscript>
-			<router-view></router-view>
+			<router-view v-on:save="save"></router-view>
 		</div>
 	</div>
 	<script type="text/javascript" src="/static/gluon-web-model.js"></script>

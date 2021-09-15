@@ -400,6 +400,10 @@ let wizard = Vue.component('wizard', {
 		<domain />
 		<location />
 		<contact />
+
+		<div class="gluon-page-actions">
+			<input class="gluon-button gluon-button-submit" type="submit" value="Speichern" @click="$emit('save')" />
+		</div>
 	</div>
 	`
 });
@@ -408,7 +412,12 @@ let admin = Vue.component('admin', {
 	template: `
 	<div>
 		<gl-topmenu />
-		<router-view />
+		<div id="maincontent">
+			<router-view />
+			<div class="gluon-page-actions">
+				<input class="gluon-button gluon-button-submit" type="submit" value="Speichern" @click="$emit('save')" />
+			</div>
+		</div>
 	</div>
 	`
 });
@@ -447,6 +456,16 @@ let vue = new Vue({
 		async load() {
 			await loadToObject(this.config, CONFIG_URL, 'GET');
 			await loadToObject(this.options, CONFIG_URL, 'OPTIONS');
+		},
+		async save() {
+			const body = JSON.stringify(this.config);
+			const response = await fetch(CONFIG_URL, { method: 'POST', body });
+
+			if (!response.ok) {
+				alert('An unexpected error happened: ' + await response.text());
+			} else {
+				alert('Success!');
+			}
 		},
 		printConfig() {
 			console.log(JSON.stringify(config, null, '   '));
