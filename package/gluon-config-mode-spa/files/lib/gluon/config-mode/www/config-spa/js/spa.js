@@ -113,6 +113,37 @@ function propertyExistsInSchema(propertyPath) {
 	}
 };
 
+function isValidIPv4(str) {
+	if ((match = str.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/))) {
+		return (match[1] >= 0) && (match[1] <= 255) &&
+			   (match[2] >= 0) && (match[2] <= 255) &&
+			   (match[3] >= 0) && (match[3] <= 255) &&
+			   (match[4] >= 0) && (match[4] <= 255);
+	}
+
+	return false;
+}
+
+function isValidIPv6(str) {
+	if (str.indexOf('::') < 0)
+		return (str.match(/^(?:[a-f0-9]{1,4}:){7}[a-f0-9]{1,4}$/i) != null);
+
+	if (
+		(str.indexOf(':::') >= 0) || str.match(/::.+::/) ||
+		str.match(/^:[^:]/) || str.match(/[^:]:$/)
+	)
+		return false;
+
+	if (str.match(/^(?:[a-f0-9]{0,4}:){2,7}[a-f0-9]{0,4}$/i))
+		return true;
+	if (str.match(/^(?:[a-f0-9]{1,4}:){7}:$/i))
+		return true;
+	if (str.match(/^:(?::[a-f0-9]{1,4}){7}$/i))
+		return true;
+
+	return false;
+}
+
 Vue.component('gl-input-checkbox-object-or-false', {
 	data () {
 		return {
@@ -196,6 +227,12 @@ Vue.component('gl-option', {
 				if ((this.schema.maximum !== undefined) && (this.value > this.schema.maximum))
 					return false;
 
+			} else if (this.type == 'string') {
+				if (this.schema.format == "ipv4") {
+					return isValidIPv4(this.value || "");
+				} else if (this.schema.format == "ipv6") {
+					return isValidIPv6(this.value || "");
+				}
 			}
 
 			return true;
