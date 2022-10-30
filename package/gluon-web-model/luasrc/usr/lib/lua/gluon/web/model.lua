@@ -56,6 +56,12 @@ return function(config, http, renderer, name, pkg)
 		hidenav = hidenav or map.hidenav
 	end
 
+	-- Regenerate forms since map:handle() may have changed them.
+	maps = load(filename, i18n)
+	for _, map in ipairs(maps) do
+		map:parse(http)
+	end
+
 	renderer.render_layout('model/wrapper', {
 		maps = maps,
 	}, nil, {
