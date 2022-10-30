@@ -341,6 +341,20 @@ function ListValue:value(key, val, ...)
 	})
 end
 
+function ListValue:remove_value(key)
+	if not self.keys[key] then
+		return false
+	end
+
+	self.keys[key] = nil
+
+	for i = 1, #self.entry_list do
+		if self.entry_list[i].key == key then
+			self.entry_list[i] = nil
+		end
+	end
+end
+
 function ListValue:entries()
 	local ret = {unpack(self.entry_list)}
 
