@@ -76,32 +76,41 @@ if dns_static then
 	end
 end
 
-s = f:section(Section)
+-- Section for interface role selection
 
-local pretty_ifnames = {
-	["/wan"] = translate("WAN-Interfaces"),
-	["/single"] = translate("Interface"),
-	["/lan"] = translate("LAN-Interfaces")
-}
+local interfaces_section = f:section(Section)
+
+local function add_interface_role_selection(section, uci_section_name, iface_name, role)
+
+	local pretty_ifnames = {
+		["/wan"] = translate("WAN-Interfaces"),
+		["/single"] = translate("Interface"),
+		["/lan"] = translate("LAN-Interfaces")
+	}
+
+	local o = section:option(MultiListValue, uci_section_name, pretty_ifnames[iface_name] or iface_name)
+
+	o.default = role
+
+	o.widget = 'radio'
+	o.orientation = 'horizontal'
+	o:value('uplink', 'Uplink')
+	o:value('mesh', 'Mesh')
+	o:value('client', 'Client')
+	o:exclusive('uplink', 'client')
+	o:exclusive('mesh', 'client')
+
+	function o:write(data)
+		-- TODO: create section (and assign name) if not existing
+		uci:set_list("gluon", uci_section_name, "role", data)
+	end
+end
 
 uci:foreach('gluon', 'interface', function(config)
-	local section_name = config['.name']
-	local ifaces = s:option(MultiListValue, section_name, pretty_ifnames[config.name] or config.name)
+	local uci_section_name = config['.name']
+	local iface_name = config.name
 
-	ifaces.widget = 'radio'
-	ifaces.orientation = 'horizontal'
-	ifaces:value('uplink', 'Uplink')
-	ifaces:value('mesh', 'Mesh')
-	ifaces:value('client', 'Client')
-	ifaces:exclusive('uplink', 'client')
-	ifaces:exclusive('mesh', 'client')
-
-	ifaces.default = config.role
-
-	function ifaces:write(data)
-		-- TODO: create section (and assign name) if not existing
-		uci:set_list("gluon", section_name, "role", data)
-	end
+	add_interface_role_selection(interfaces_section, uci_section_name, iface_name, config.role)
 end)
 
 
@@ -212,34 +221,48 @@ local vlan_id = s:option(Value, "vlan_id", translate("VLAN ID"))
 vlan_id.datatype = "irange(1,4094)"
 vlan_id:depends(action, "create_vlan_interface")
 
-function create_vlan_interface()
-	local new_iface = interface.data .. '.' .. vlan_id.data
-	local section_name = 'iface_' .. interface.data .. '_vlan' .. vlan_id.data
-
-	uci:section('gluon', 'interface', section_name, {
-		name = new_iface,
-		role = {}
-	})
-	uci:commit('gluon')
-end
-
 -- Options for action "delete_vlan_interface"
 
 local vlan_iface_to_delete = s:option(ListValue, "vlan_iface_to_delete", translate("VLAN Interface"))
 vlan_iface_to_delete:depends(action, "delete_vlan_interface")
 
 uci:foreach('gluon', 'interface', function(config)
-	local section_name = config['.name']
+	local uci_section_name = config['.name']
 	local iface = config.name
 
-	if section_name:find("vlan") then
-		vlan_iface_to_delete:value(section_name, iface)
+	if uci_section_name:find("vlan") then
+		vlan_iface_to_delete:value(uci_section_name, iface)
 	end
 end)
 
-function delete_vlan_interface()
-	uci:delete('gluon', vlan_iface_to_delete.data)
+function create_vlan_interface()
+	local new_iface = interface.data .. '.' .. vlan_id.data
+	local uci_section_name = 'iface_' .. interface.data .. '_vlan' .. vlan_id.data
+
+	uci:section('gluon', 'interface', uci_section_name, {
+		name = new_iface,
+		role = {}
+	})
 	uci:commit('gluon')
+
+	add_interface_role_selection(interfaces_section, uci_section_name, new_iface, {})
+	vlan_iface_to_delete:value(uci_section_name, new_iface)
+end
+
+function delete_vlan_interface()
+	local uci_section_name = vlan_iface_to_delete.data
+	uci:delete('gluon', uci_section_name)
+	uci:commit('gluon')
+
+	-- Since the form is created before this handler is called, we need to remove
+	-- parts of the form manually here:
+	vlan_iface_to_delete:remove_value(uci_section_name)
+	for i, option in ipairs(interfaces_section.children) do
+		if option.name == uci_section_name then
+			interfaces_section:remove(option)
+			return
+		end
+	end
 end
 
 function f_actions:write(data)
