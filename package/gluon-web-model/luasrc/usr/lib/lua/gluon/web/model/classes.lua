@@ -64,6 +64,15 @@ function Node:append(obj)
 	obj.parent = self
 end
 
+function Node:remove(obj, child)
+	table.remove(self.children, obj.index)
+
+	-- Update indices
+	for i, child in ipairs(self.children) do
+		child.index = i
+	end
+end
+
 function Node:id_suffix()
 	return self.name or (self.index and tostring(self.index)) or '_'
 end
