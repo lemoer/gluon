@@ -4,16 +4,11 @@ local site = require 'gluon.site'
 local glob = require 'posix.glob'
 local libgen = require 'posix.libgen'
 local simpleuci = require 'simple-uci'
-local schema = dofile('/lib/gluon/config-api/controller/schema.lua')
-local ucl = require "ucl"
 
 package 'gluon-config-api'
 
 function load_parts()
 	local parts = {}
-	for _, f in pairs(glob.glob('/lib/gluon/config-api/parts/*.lua')) do
-		table.insert(parts, dofile(f))
-	end
 	return parts
 end
 
@@ -96,47 +91,39 @@ local function get_request_body_as_json(http)
 	return data
 end
 
-local function verify_schema(schema, config)
-	local parser = ucl.parser()
-	local res, err = parser:parse_string(json.stringify(config))
 
-	assert(res, "Internal UCL Parsing Failed. This should not happen at all.")
-
-	res, err = parser:validate(schema)
-	return res
+for _, f in pairs(glob.glob('/lib/gluon/config-api/parts/*.lua')) do
+	table.insert(parts, dofile(f))
 end
 
-entry({"v1", "config"}, call(function(http, renderer)
-	local parts = load_parts()
+function rest_api_handler(module_path)
+	return call(function(http, renderer)
+		local uci = simpleuci.cursor()
+		local M = dofile(module_path)
+	
+		if http.request.env.REQUEST_METHOD == 'GET' then
+			json_response(http, {
+				info = M.info(site),
+				config = M.get(site)
+			})
+		elseif http.request.env.REQUEST_METHOD == 'POST' then
+			local config = get_request_body_as_json(http)
+			local info = M.info(site)
 
-	if http.request.env.REQUEST_METHOD == 'GET' then
-		json_response(http, config_get(parts))
-	elseif http.request.env.REQUEST_METHOD == 'POST' then
-		local config = get_request_body_as_json(http)
-
-		-- Verify schema
-		if not verify_schema(schema_get(parts), config) then
-			http:status(400, 'Bad Request')
-			json_response(http, { status = 400, error = "Schema mismatch" })
-			http:close()
-			return
+			if M.set(config) then
+				json_response(http, { status = 200, error = "Accepted" })
+			else
+				http:status(400, 'Bad Request')
+				json_response(http, { status = 400, error = "Validation Error" })
+			end
+		else
+			http:status(501, 'Not Implemented')
+			http:header('Content-Length', '0')
+			http:write('Not Implemented\n')
 		end
+	
+		http:close()
+	end)
+end
 
-		-- Apply config
-		config_set(parts, config)
-
-		-- Write result
-		json_response(http, { status = 200, error = "Accepted" })
-	elseif http.request.env.REQUEST_METHOD == 'OPTIONS' then
-		json_response(http, {
-			schema = schema_get(parts),
-			allowed_methods = {'GET', 'POST', 'OPTIONS'}
-		})
-	else
-		http:status(501, 'Not Implemented')
-		http:header('Content-Length', '0')
-		http:write('Not Implemented\n')
-	end
-
-	http:close()
-end))
+entry({"v1", "config", "contact-info"}, rest_api_handler('/lib/gluon/config-api/parts/contact-info.lua'))

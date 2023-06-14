@@ -1,32 +1,25 @@
 
 local M = {}
 
-function M.schema(site, platform)
-	return {
-		properties = {
-			wizard = {
-				properties = {
-					contact = {
-						type = 'string'
-					}
-				}
-			}
-		}
-	}
+function M.info(site)
+	return {}
 end
 
 function M.set(config, uci)
 	local owner = uci:get_first("gluon-node-info", "owner")
 
-	uci:set("gluon-node-info", owner, "contact", config.wizard.contact)
+	uci:set("gluon-node-info", owner, "contact", config.contact)
 	uci:save("gluon-node-info")
+
+	return true
 end
 
 function M.get(uci, config)
 	local owner = uci:get_first("gluon-node-info", "owner")
 
-	config.wizard = config.wizard or {}
-	config.wizard.contact = uci:get("gluon-node-info", owner, "contact")
+	return {
+		contact = uci:get("gluon-node-info", owner, "contact")
+	}
 end
 
 return M
