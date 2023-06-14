@@ -89,6 +89,9 @@ end
 
 -- this is a hack for jsonc to make sure, it interprets an empty object as object and not as array
 function jsonc_ensure_object(input)
+	if type(input) ~= "table" then
+		return input
+	end
 	input[{}] = ""; -- this will not end up in the json
 	return input
 end
@@ -132,3 +135,5 @@ function rest_api_handler(module_path)
 end
 
 entry({"v1", "config", "contact-info"}, rest_api_handler('/lib/gluon/config-api/parts/contact-info.lua'))
+entry({"v1", "config", "geo-location"}, rest_api_handler('/lib/gluon/config-api/parts/geo-location.lua'))
+
