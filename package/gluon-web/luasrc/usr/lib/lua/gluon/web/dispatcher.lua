@@ -195,11 +195,9 @@ local function dispatch(config, http, request)
 	ok, err = pcall(node.target)
 	if not ok then
 		http:status(500, "Internal Server Error")
-		renderer.render_layout("error/500", {
-			message =
-				"Failed to execute dispatcher target for entry '/" .. table.concat(request, "/") .. "'.\n" ..
-				"The called action terminated with an exception:\n" .. tostring(err or "(unknown)"),
-		}, 'gluon-web')
+		http:prepare_content("text/plain")
+		http:write("Failed to execute dispatcher target for entry '/" .. table.concat(request, "/") .. "'.\n" ..
+				"The called action terminated with an exception:\n" .. tostring(err or "(unknown)") .. "\r\n")
 	end
 end
 

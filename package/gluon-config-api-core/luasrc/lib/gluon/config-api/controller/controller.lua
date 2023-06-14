@@ -75,10 +75,6 @@ local function get_request_body_as_json(http)
 		end
 	end)
 
-	-- Verify that we really have JSON input. UCL is able to parse other
-	-- config formats as well. Those config formats allow includes and so on.
-	-- This may be a security issue.
-
 	local data = json.parse(request_body)
 
 	if not data then
@@ -91,10 +87,16 @@ local function get_request_body_as_json(http)
 	return data
 end
 
-
-for _, f in pairs(glob.glob('/lib/gluon/config-api/parts/*.lua')) do
-	table.insert(parts, dofile(f))
+-- this is a hack for jsonc to make sure, it interprets an empty object as object and not as array
+function jsonc_ensure_object(input)
+	input[{}] = ""; -- this will not end up in the json
+	return input
 end
+
+
+-- for _, f in pairs(glob.glob('/lib/gluon/config-api/parts/*.lua')) do
+-- 	table.insert(parts, dofile(f))
+-- end
 
 function rest_api_handler(module_path)
 	return call(function(http, renderer)
@@ -102,15 +104,18 @@ function rest_api_handler(module_path)
 		local M = dofile(module_path)
 	
 		if http.request.env.REQUEST_METHOD == 'GET' then
+			jsonc_null = function() end -- this is a hack for jsonc to insert null into the json
 			json_response(http, {
-				info = M.info(site),
-				config = M.get(site)
+				info = jsonc_ensure_object(M.info(site)),
+				config = jsonc_ensure_object(M.get(uci, jsonc_null))
 			})
-		elseif http.request.env.REQUEST_METHOD == 'POST' then
-			local config = get_request_body_as_json(http)
+		elseif http.request.env.REQUEST_METHOD == 'PUT' then
+			local body = get_request_body_as_json(http)
 			local info = M.info(site)
 
-			if M.set(config) then
+			if M.set(body.config, uci) then
+				-- commit all uci configs
+				os.execute('uci commit')
 				json_response(http, { status = 200, error = "Accepted" })
 			else
 				http:status(400, 'Bad Request')
