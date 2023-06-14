@@ -7,41 +7,6 @@ local simpleuci = require 'simple-uci'
 
 package 'gluon-config-api'
 
-function load_parts()
-	local parts = {}
-	return parts
-end
-
-function config_get(parts)
-	local config = {}
-	local uci = simpleuci.cursor()
-
-	for _, part in pairs(parts) do
-		part.get(uci, config)
-	end
-
-	return config
-end
-
-function schema_get(parts)
-	local total_schema = {}
-	for _, part in pairs(parts) do
-		total_schema = schema.merge_schemas(total_schema, part.schema(site, nil))
-	end
-	return total_schema
-end
-
-function config_set(parts, config)
-	local uci = simpleuci.cursor()
-
-	for _, part in pairs(parts) do
-		part.set(config, uci)
-	end
-
-	-- commit all uci configs
-	os.execute('uci commit')
-end
-
 local function pump(src, snk)
 	while true do
 		local chunk, src_err = src()
@@ -95,11 +60,6 @@ function jsonc_ensure_object(input)
 	input[{}] = ""; -- this will not end up in the json
 	return input
 end
-
-
--- for _, f in pairs(glob.glob('/lib/gluon/config-api/parts/*.lua')) do
--- 	table.insert(parts, dofile(f))
--- end
 
 function rest_api_handler(module_path)
 	return call(function(http, renderer)
