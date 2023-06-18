@@ -31,6 +31,33 @@ function M.info(site, uci)
 	}
 end
 
+function M.validate(config, uci)
+	local validation = require 'gluon.validation'
+
+	-- ipv4
+
+	local ipv4_proto = validation.need_one_of(config, {'wan', 'ipv4', 'proto'}, {'static', 'dhcp', 'none'})
+	if ipv4_proto == 'static' then
+		validation.need_ip4addr(config, {'wan', 'ipv4', 'ip'})
+		validation.need_ip4addr(config, {'wan', 'ipv4', 'netmask'})
+		validation.need_ip4addr(config, {'wan', 'ipv4', 'gateway'})
+	end
+
+	-- ipv6
+
+	local ipv6_proto = validation.need_one_of(config, {'wan', 'ipv6', 'proto'},  {'static', 'dhcpv6', 'none'})
+	if ipv6_proto == 'static' then
+		validation.need_ip6addr(config, {'wan', 'ipv6', 'ip'})
+		validation.need_ip6addr(config, {'wan', 'ipv6', 'gateway'})
+	end
+
+	-- static dns servers
+	local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
+	if dns_static then
+		validation.need_array(config, {'wan', 'static_dns_servers'}, validation.need_ipaddr)
+	end
+end
+
 function M.set(config, uci)
 	-- ipv4
 	uci:set("network", "wan", "proto", config.wan.ipv4.proto)
@@ -62,8 +89,6 @@ function M.set(config, uci)
 	end
 
 	uci:save("network")
-
-	return true
 end
 
 function M.get(uci, null)
