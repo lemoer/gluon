@@ -5,18 +5,16 @@ local M = {}
 --     "info": {
 --     },
 --     "config": {
---         "wan": {
---             "ipv4": {
---                 "proto": "static",
---                 "ip": "192.168.0.123",
---                 "netmask": "255.255.255.0",
---                 "gateway": "192.168.0.1"
---             },
---             "ipv6": {
---                 "proto": "automatic"
---             },
---             "static_dns_servers": ["8.8.8.8", "1.1.1.1"]
+--         "ipv4": {
+--             "proto": "static",
+--             "ip": "192.168.0.123",
+--             "netmask": "255.255.255.0",
+--             "gateway": "192.168.0.1"
 --         },
+--         "ipv6": {
+--             "proto": "automatic"
+--         },
+--         "static_dns_servers": ["8.8.8.8", "1.1.1.1"]
 --     }
 -- }
 
@@ -36,35 +34,35 @@ function M.validate(config, uci)
 
 	-- ipv4
 
-	local ipv4_proto = validation.need_one_of(config, {'wan', 'ipv4', 'proto'}, {'static', 'dhcp', 'none'})
+	local ipv4_proto = validation.need_one_of(config, {'ipv4', 'proto'}, {'static', 'dhcp', 'none'})
 	if ipv4_proto == 'static' then
-		validation.need_ip4addr(config, {'wan', 'ipv4', 'ip'})
-		validation.need_ip4addr(config, {'wan', 'ipv4', 'netmask'})
-		validation.need_ip4addr(config, {'wan', 'ipv4', 'gateway'})
+		validation.need_ip4addr(config, {'ipv4', 'ip'})
+		validation.need_ip4addr(config, {'ipv4', 'netmask'})
+		validation.need_ip4addr(config, {'ipv4', 'gateway'})
 	end
 
 	-- ipv6
 
-	local ipv6_proto = validation.need_one_of(config, {'wan', 'ipv6', 'proto'},  {'static', 'dhcpv6', 'none'})
+	local ipv6_proto = validation.need_one_of(config, {'ipv6', 'proto'},  {'static', 'dhcpv6', 'none'})
 	if ipv6_proto == 'static' then
-		validation.need_ip6addr(config, {'wan', 'ipv6', 'ip'})
-		validation.need_ip6addr(config, {'wan', 'ipv6', 'gateway'})
+		validation.need_ip6addr(config, {'ipv6', 'ip'})
+		validation.need_ip6addr(config, {'ipv6', 'gateway'})
 	end
 
 	-- static dns servers
 	local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
 	if dns_static then
-		validation.need_array(config, {'wan', 'static_dns_servers'}, validation.need_ipaddr)
+		validation.need_array(config, {'static_dns_servers'}, validation.need_ipaddr)
 	end
 end
 
 function M.set(config, uci)
 	-- ipv4
-	uci:set("network", "wan", "proto", config.wan.ipv4.proto)
-	if config.wan.ipv4.proto == "static" then
-		uci:set("network", "wan", "ipaddr", config.wan.ipv4.ip)
-		uci:set("network", "wan", "netmask", config.wan.ipv4.netmask)
-		uci:set("network", "wan", "gateway", config.wan.ipv4.gateway)
+	uci:set("network", "wan", "proto", config.ipv4.proto)
+	if config.ipv4.proto == "static" then
+		uci:set("network", "wan", "ipaddr", config.ipv4.ip)
+		uci:set("network", "wan", "netmask", config.ipv4.netmask)
+		uci:set("network", "wan", "gateway", config.ipv4.gateway)
 	else
 		uci:delete("network", "wan", "ipaddr")
 		uci:delete("network", "wan", "netmask")
@@ -72,10 +70,10 @@ function M.set(config, uci)
 	end
 
 	-- ipv6
-	uci:set("network", "wan6", "proto", config.wan.ipv6.proto)
-	if config.wan.ipv6.proto == "static" then
-		uci:set("network", "wan6", "ip6addr", config.wan.ipv6.ip)
-		uci:set("network", "wan6", "ip6gw", config.wan.ipv6.gateway)
+	uci:set("network", "wan6", "proto", config.ipv6.proto)
+	if config.ipv6.proto == "static" then
+		uci:set("network", "wan6", "ip6addr", config.ipv6.ip)
+		uci:set("network", "wan6", "ip6gw", config.ipv6.gateway)
 	else
 		uci:delete("network", "wan6", "ip6addr")
 		uci:delete("network", "wan6", "ip6gw")
@@ -85,7 +83,7 @@ function M.set(config, uci)
 	local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
 
 	if dns_static then
-		uci:set_list("gluon-wan-dnsmasq", dns_static, "server", config.wan.static_dns_servers)
+		uci:set_list("gluon-wan-dnsmasq", dns_static, "server", config.static_dns_servers)
 	end
 
 	uci:save("network")
@@ -124,11 +122,9 @@ function M.get(uci, null)
 	end
 
 	return {
-		wan = {
-			ipv4 = ipv4,
-			ipv6 = ipv6,
-			static_dns_servers = static_dns_servers
-		},
+		ipv4 = ipv4,
+		ipv6 = ipv6,
+		static_dns_servers = static_dns_servers
 	}
 end
 
