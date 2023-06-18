@@ -32,6 +32,37 @@ function M.info(site, uci)
 end
 
 function M.set(config, uci)
+	-- ipv4
+	uci:set("network", "wan", "proto", config.wan.ipv4.proto)
+	if config.wan.ipv4.proto == "static" then
+		uci:set("network", "wan", "ipaddr", config.wan.ipv4.ip)
+		uci:set("network", "wan", "netmask", config.wan.ipv4.netmask)
+		uci:set("network", "wan", "gateway", config.wan.ipv4.gateway)
+	else
+		uci:delete("network", "wan", "ipaddr")
+		uci:delete("network", "wan", "netmask")
+		uci:delete("network", "wan", "gateway")
+	end
+
+	-- ipv6
+	uci:set("network", "wan6", "proto", config.wan.ipv6.proto)
+	if config.wan.ipv6.proto == "static" then
+		uci:set("network", "wan6", "ip6addr", config.wan.ipv6.ip)
+		uci:set("network", "wan6", "ip6gw", config.wan.ipv6.gateway)
+	else
+		uci:delete("network", "wan6", "ip6addr")
+		uci:delete("network", "wan6", "ip6gw")
+	end
+
+	-- static dns servers
+	local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
+
+	if dns_static then
+		uci:set_list("gluon-wan-dnsmasq", dns_static, "server", config.wan.static_dns_servers)
+	end
+
+	uci:save("network")
+
 	return true
 end
 
@@ -59,7 +90,7 @@ function M.get(uci, null)
 		ipv6.gateway = wan6.ip6gw
 	end
 
-	-- dns
+	-- static dns servers
 	local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
 	local static_dns_servers = nil
 
