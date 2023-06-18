@@ -5,13 +5,17 @@ function M.info(site)
 	return {}
 end
 
+function M.validate(config, uci)
+	local validation = require 'gluon.validation'
+
+	validation.need_string(config, { 'contact' }, false)
+end
+
 function M.set(config, uci)
 	local owner = uci:get_first("gluon-node-info", "owner")
 
 	uci:set("gluon-node-info", owner, "contact", config.contact)
 	uci:save("gluon-node-info")
-
-	return true
 end
 
 function M.get(uci, null)
