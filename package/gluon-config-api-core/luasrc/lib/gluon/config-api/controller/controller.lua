@@ -69,12 +69,11 @@ function rest_api_handler(module_path)
 		if http.request.env.REQUEST_METHOD == 'GET' then
 			jsonc_null = function() end -- this is a hack for jsonc to insert null into the json
 			json_response(http, {
-				info = jsonc_ensure_object(M.info(site)),
+				info = jsonc_ensure_object(M.info(site, uci)),
 				config = jsonc_ensure_object(M.get(uci, jsonc_null))
 			})
 		elseif http.request.env.REQUEST_METHOD == 'PUT' then
 			local body = get_request_body_as_json(http)
-			local info = M.info(site)
 
 			if M.set(body.config, uci) then
 				-- commit all uci configs

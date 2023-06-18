@@ -21,8 +21,14 @@ local M = {}
 -- }
 
 
-function M.info(site)
-	return {}
+function M.info(site, uci)
+	local features = {}
+	local dns_static = uci:get_first("gluon-wan-dnsmasq", "static")
+	features.static_dns_servers = dns_static ~= nil
+
+	return {
+		features = features
+	}
 end
 
 function M.set(config, uci)
