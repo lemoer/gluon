@@ -75,14 +75,23 @@ function rest_api_handler(module_path)
 		elseif http.request.env.REQUEST_METHOD == 'PUT' then
 			local body = get_request_body_as_json(http)
 
-			if M.set(body.config, uci) then
-				-- commit all uci configs
-				os.execute('uci commit')
-				json_response(http, { status = 200, error = "Accepted" })
-			else
-				http:status(400, 'Bad Request')
-				json_response(http, { status = 400, error = "Validation Error" })
+			local ok, err = pcall(M.validate, body.config, uci)
+			if not ok then
+				if err.type == 'validation_error' then
+					http:status(400, 'Bad Request')
+					json_response(http, { status = 400, error = "Bad Request", message = err.msg })
+				else
+					http:status(500, 'Internal Server Error')
+					http:write(err)
+				end
+				http:close()
+				return
 			end
+
+			M.set(body.config, uci)
+			-- commit all uci configs
+			os.execute('uci commit')
+			json_response(http, { status = 200, error = "Accepted" })
 		else
 			http:status(501, 'Not Implemented')
 			http:header('Content-Length', '0')
