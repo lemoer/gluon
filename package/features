@@ -39,6 +39,7 @@ when(_'web-advanced' and _'autoupdater', {
 feature('config-api', {
 	'gluon-config-api-contact-info',
 	'gluon-config-api-geo-location',
+	'gluon-config-api-network'
 })
 
 
