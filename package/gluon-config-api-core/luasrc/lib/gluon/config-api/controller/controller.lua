@@ -105,4 +105,4 @@ end
 entry({"v1", "config", "contact-info"}, rest_api_handler('/lib/gluon/config-api/parts/contact-info.lua'))
 entry({"v1", "config", "geo-location"}, rest_api_handler('/lib/gluon/config-api/parts/geo-location.lua'))
 entry({"v1", "config", "network", "uplink"}, rest_api_handler('/lib/gluon/config-api/parts/network/uplink.lua'))
-
+entry({"v1", "config", "network", "interface-roles"}, rest_api_handler('/lib/gluon/config-api/parts/network/interface-roles.lua'))

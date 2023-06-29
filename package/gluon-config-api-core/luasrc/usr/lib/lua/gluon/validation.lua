@@ -194,4 +194,60 @@ function M.need_array(obj, path, subcheck, required)
 	return val
 end
 
+function M.need_array_of(obj, path, array, required)
+	return M.need_array(obj, path, function(obj, e) M.need_one_of(obj, e, array) end, required)
+end
+
+function M.need_table(obj, path, subcheck, required)
+	local val = need_type(obj, path, 'table', required, 'be a table')
+	if not val then
+		return nil
+	end
+
+	if subcheck then
+		for k, _ in pairs(val) do
+			subcheck(obj, M.extend(path, {k}))
+		end
+	end
+
+	return val
+end
+
+function M.need_alphanumeric_key(path)
+	local val = path[#path]
+	-- We don't use character classes like %w here to be independent of the locale
+	if type(val) ~= 'string' or not val:match('^[0-9a-zA-Z_]+$') then
+		var_error(path, val, 'have a string key using only alphanumeric characters and underscores')
+	end
+end
+
+local function contains(table, val)
+	for i=1,#table do
+		if table[i] == val then
+			return true
+		end
+	end
+	return false
+end
+
+function M.need_array_elements_exclusive(obj, path, a, b, required)
+	local val = need_type(obj, path, 'table', required, 'be an array')
+	if not val then
+		return nil
+	end
+
+	if contains(val, a) and contains(val, b) then
+		validation_error = {
+			type = "validation_error",
+			msg = string.format('expected %s to contain only one of the elements %s and %s, but not both.',
+				path_to_string(path), format(a), format(b))
+		}
+
+		error(validation_error)
+	end
+
+	return val
+end
+
+
 return M
