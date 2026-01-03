@@ -1,0 +1,24 @@
+From 1dfa8c6134ce8cb4e0b5cae2c61c23ac6e07bf9a Mon Sep 17 00:00:00 2001
+From: lemoer <git@irrelefant.net>
+Date: Sat, 3 Jan 2026 02:40:41 +0100
+Subject: [PATCH 3/4] add marker
+
+---
+ target/linux/ath79/config-6.6 | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/target/linux/ath79/config-6.6 b/target/linux/ath79/config-6.6
+index fff85f6f3a..098e65c490 100644
+--- a/target/linux/ath79/config-6.6
++++ b/target/linux/ath79/config-6.6
+@@ -114,6 +114,7 @@ CONFIG_IRQ_WORK=y
+ CONFIG_LEDS_GPIO=y
+ # CONFIG_LEDS_RESET is not set
+ CONFIG_LIBFDT=y
++CONFIG_LOCALVERSION="-PERFTEST"
+ CONFIG_LOCK_DEBUGGING_SUPPORT=y
+ CONFIG_MDIO_BITBANG=y
+ CONFIG_MDIO_BUS=y
+-- 
+2.48.1
+

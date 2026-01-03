@@ -1,0 +1,25 @@
+From 08ab8bae370f0e913fbfb7fb4010b117adfb0757 Mon Sep 17 00:00:00 2001
+From: lemoer <git@irrelefant.net>
+Date: Sat, 3 Jan 2026 21:44:43 +0100
+Subject: [PATCH 4/4] ensure perf
+
+---
+ target/linux/generic/config-6.6 | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/target/linux/generic/config-6.6 b/target/linux/generic/config-6.6
+index d7e08f35cf..43a00d7452 100644
+--- a/target/linux/generic/config-6.6
++++ b/target/linux/generic/config-6.6
+@@ -4578,8 +4578,6 @@ CONFIG_PCP_BATCH_SCALE_MAX=5
+ # CONFIG_PECI is not set
+ # CONFIG_PERCPU_STATS is not set
+ # CONFIG_PERCPU_TEST is not set
+-# CONFIG_PERF_EVENTS is not set
+-# CONFIG_PERF_EVENTS_AMD_POWER is not set
+ # CONFIG_PERSISTENT_KEYRINGS is not set
+ # CONFIG_PER_VMA_LOCK_STATS is not set
+ # CONFIG_PHANTOM is not set
+-- 
+2.48.1
+
