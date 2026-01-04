@@ -1,4 +1,4 @@
-GLUON_FEEDS='gluon packages routing'
+GLUON_FEEDS='gluon packages routing wgtrace'
 
 OPENWRT_REPO=https://github.com/openwrt/openwrt.git
 OPENWRT_BRANCH=openwrt-24.10
@@ -14,3 +14,7 @@ PACKAGES_PACKAGES_COMMIT=5b345d75962190250806e361325b72ed4c2b4f78
 PACKAGES_ROUTING_REPO=https://github.com/openwrt/routing.git
 PACKAGES_ROUTING_BRANCH=openwrt-24.10
 PACKAGES_ROUTING_COMMIT=178a40d321d6c11f18528f34777f4e24ce62b19a
+
+PACKAGES_WGTRACE_REPO=../../../veth-batman
+PACKAGES_WGTRACE_BRANCH=main
+PACKAGES_WGTRACE_COMMIT=4d8af0692a3a27d69b3cefc1acb771e31bd9196e

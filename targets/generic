@@ -6,6 +6,7 @@ config('GLUON_VERSION', env.GLUON_VERSION)
 config('GLUON_SITE_VERSION', env.GLUON_SITE_VERSION)
 config('GLUON_RELEASE', env.GLUON_RELEASE)
 
+
 try_config('GLUON_AUTOUPDATER_BRANCH', env.GLUON_AUTOUPDATER_BRANCH)
 try_config('GLUON_AUTOUPDATER_ENABLED', istrue(env.GLUON_AUTOUPDATER_ENABLED))
 
@@ -37,7 +38,6 @@ config('TARGET_ROOTFS_INITRAMFS', false)
 
 config('DEVEL', true)
 config('ALL_NONSHARED', true)
-config('BPF_TOOLCHAIN_HOST', true)
 
 try_config('PACKAGE_usbip', false) -- fails to build
 try_config('PACKAGE_coova-chilli', false) -- fails to build
@@ -78,6 +78,18 @@ config('KERNEL_MPTCP', false)
 config('KERNEL_SWAP', false)
 config('USE_SECCOMP', false)
 config('KERNEL_SECCOMP', false)
+config('KERNEL_PERF_EVENTS', true)
+config('KERNEL_BPF_EVENTS', true)
+config('KERNEL_DEBUG_INFO_REDUCED', false)
+config('KERNEL_DEBUG_INFO_BTF', true)
+config('KERNEL_MODULE_ALLOW_BTF_MISMATCH', true)
+--config('BPF_TOOLCHAIN_PREBUILT', true)
+--config('USE_LLVM_BUILD', true)
+--config('SDK_LLVM_BPF', true)
+--config('BPF_TOOLCHAIN_BUILD_LLVM', true)
+config('BPF_TOOLCHAIN_HOST', true)
+config('DWARVES', true)
+config('BUILD_LOG', true)
 -- kmod-mt7915e pulls in CONFIG_KERNEL_RELAY
 -- use try_config, so enabling the package is still possible
 try_config('PACKAGE_kmod-mt7915e', false)
@@ -85,6 +97,7 @@ try_config('PACKAGE_kmod-mt7915e', false)
 try_config('OONF_GENERIC_HTTP', true)
 
 config('COLLECT_KERNEL_DEBUG', true)
+
 
 config('BUSYBOX_CUSTOM', true)
 config('BUSYBOX_CONFIG_UNSHARE', true)
@@ -127,6 +140,8 @@ packages {
 	'-wpad-basic',
 	'-wpad-basic-mbedtls',
 	'-firewall4',
+	'-perf',
 	'gluon-core',
 	'ip6tables-zz-legacy',
+	'wg-trace-delay-c',
 }
