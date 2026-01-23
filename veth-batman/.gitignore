@@ -1,0 +1,26 @@
+# Go build artefacts
+/bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go build outputs im Projektroot
+/wg_trace_delay
+/wg_trace_delay_c
+
+# eBPF build artefacts
+*.o
+bpf/vmlinux.h
+
+# Editor/OS
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+.ninja_log
+ping.log
+wg_trace_delay_c.log

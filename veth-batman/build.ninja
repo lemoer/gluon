@@ -1,0 +1,46 @@
+# Auto-generierte Ninja-Builddatei für eBPF TCP-ACK-Latenz
+
+# Hinweis:
+# 1) Du brauchst eine passende vmlinux.h für deinen Kernel.
+#    Diese wird nun automatisch via bpftool aus /sys/kernel/btf/vmlinux
+#    erzeugt.
+# 2) Passe ggf. __TARGET_ARCH_arm64 an deine Architektur an
+#    (z.B. __TARGET_ARCH_x86 auf x86_64).
+
+ninja_required_version = 1.10
+
+# Regeln
+
+rule gen_vmlinux
+  command = bpftool btf dump file /sys/kernel/btf/vmlinux format c > bpf/vmlinux.h
+  description = GEN  bpf/vmlinux.h
+
+rule clang_bpf
+  command = clang -O2 -g -target bpf -D__TARGET_ARCH_arm64 -I./bpf -c $in -o $out
+  description = BPF  $out
+
+rule go_build
+  command = GO111MODULE=on go build -o wg_trace_delay ./cmd/wg_trace_delay
+  description = GO   wg_trace_delay
+
+rule cc_wg_trace_delay_c
+  command = cc -O2 -g -Wall -Wextra -o $out $in $$(pkg-config --cflags --libs libbpf)
+  description = CC   $out
+
+# Targets
+
+# vmlinux.h aus dem laufenden Kernel erzeugen
+build bpf/vmlinux.h: gen_vmlinux
+
+# BPF-Objekt (hängt von vmlinux.h ab)
+build bpf/wg_trace_delay.bpf.o: clang_bpf bpf/wg_trace_delay.bpf.c | bpf/vmlinux.h
+
+# Go-Binary bauen (hängt vom BPF-Objekt und den Go-Quellen ab)
+# Explizite Dependencies, damit Ninja bei Änderungen an Go-Code
+# und Modulfiles einen Rebuild triggert.
+build wg_trace_delay: go_build bpf/wg_trace_delay.bpf.o cmd/wg_trace_delay/main.go go.mod go.sum
+
+# C-Variante des Userspace-Tools
+build wg_trace_delay_c: cc_wg_trace_delay_c wg_trace_delay_c_src/main.c | bpf/wg_trace_delay.bpf.o
+
+default wg_trace_delay

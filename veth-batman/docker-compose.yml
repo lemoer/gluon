@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  wg1:
+    build: .
+    container_name: wg1
+    cpuset: "0"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      wgnet:
+        ipv4_address: 10.200.0.2
+    #cpus: "0.01"
+
+  wg2:
+    build: .
+    container_name: wg2
+    cpuset: "0"
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    networks:
+      wgnet:
+        ipv4_address: 10.200.0.3
+    #cpus: "0.01"
+
+networks:
+  wgnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.200.0.0/24
